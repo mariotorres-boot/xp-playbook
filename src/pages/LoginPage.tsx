@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,7 +10,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const login = useProjectStore((s) => s.login);
+  const isLoggedIn = useProjectStore((s) => s.isLoggedIn);
 
+  if (isLoggedIn) return <Navigate to="/dashboard" replace />;
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) login(email.trim());
