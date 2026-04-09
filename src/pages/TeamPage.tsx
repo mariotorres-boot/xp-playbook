@@ -10,13 +10,13 @@ export default function TeamPage() {
     .filter((s) => s.pair && s.status !== 'done')
     .map((s) => ({
       story: s.title,
-      driver: team.find((m) => m.id === s.pair!.driver)?.name || 'Unknown',
-      navigator: team.find((m) => m.id === s.pair!.navigator)?.name || 'Unknown',
+      driver: team.find((m) => m.id === s.pair!.driver)?.name || 'Desconocido',
+      navigator: team.find((m) => m.id === s.pair!.navigator)?.name || 'Desconocido',
     }));
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Team & Pair Programming</h1>
+      <h1 className="text-2xl font-bold">Equipo y Programación en Parejas</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {team.map((m) => {
@@ -35,7 +35,7 @@ export default function TeamPage() {
                   </div>
                 </div>
                 <div className="mt-3 text-sm text-muted-foreground">
-                  {active.length} active · {assigned.length} total stories
+                  {active.length} activas · {assigned.length} historias totales
                 </div>
               </CardContent>
             </Card>
@@ -47,22 +47,22 @@ export default function TeamPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" /> Active Pair Assignments
+              <Users className="h-4 w-4 text-primary" /> Asignaciones de Parejas Activas
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {activePairs.map((p, i) => (
               <div key={i} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-1.5 text-sm">
-                  <Badge variant="default" className="text-xs">Driver</Badge>
+                  <Badge variant="default" className="text-xs">Conductor</Badge>
                   <span className="font-medium">{p.driver}</span>
                 </div>
                 <span className="text-muted-foreground">+</span>
                 <div className="flex items-center gap-1.5 text-sm">
-                  <Badge variant="secondary" className="text-xs">Navigator</Badge>
+                  <Badge variant="secondary" className="text-xs">Navegador</Badge>
                   <span className="font-medium">{p.navigator}</span>
                 </div>
-                <span className="text-xs text-muted-foreground ml-auto">on: {p.story}</span>
+                <span className="text-xs text-muted-foreground ml-auto">en: {p.story}</span>
               </div>
             ))}
           </CardContent>

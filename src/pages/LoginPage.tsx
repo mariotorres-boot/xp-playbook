@@ -13,6 +13,7 @@ export default function LoginPage() {
   const isLoggedIn = useProjectStore((s) => s.isLoggedIn);
 
   if (isLoggedIn) return <Navigate to="/dashboard" replace />;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) login(email.trim());
@@ -26,24 +27,24 @@ export default function LoginPage() {
             <Zap className="h-6 w-6 text-primary-foreground" />
           </div>
           <CardTitle className="text-xl">XP Project Manager</CardTitle>
-          <CardDescription>Sign in to manage your projects</CardDescription>
+          <CardDescription>Inicia sesión para gestionar tus proyectos</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               type="email"
-              placeholder="Email"
+              placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
             <Input
               type="password"
-              placeholder="Password"
+              placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <Button type="submit" className="w-full">Sign In</Button>
+            <Button type="submit" className="w-full">Iniciar Sesión</Button>
           </form>
           <Button variant="outline" className="w-full mt-3" onClick={() => login('demo@xp-project.com')}>
             Acceso Demo Rápido

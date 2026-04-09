@@ -18,22 +18,22 @@ export default function DashboardPage() {
 
   const velocityData = iterations.map((it) => ({
     name: `Iter ${it.id}`,
-    velocity: it.velocity || 0,
-    planned: stories.filter((s) => s.iteration === it.id).reduce((sum, s) => sum + s.storyPoints, 0),
+    velocidad: it.velocity || 0,
+    planificado: stories.filter((s) => s.iteration === it.id).reduce((sum, s) => sum + s.storyPoints, 0),
   }));
 
   const stats = [
-    { label: 'Completed', value: `${donePoints}/${totalPoints} SP`, icon: CheckCircle2, color: 'text-success' },
-    { label: 'In Progress', value: inProgress.length, icon: Clock, color: 'text-accent' },
-    { label: 'Critical Bugs', value: criticalBugs.length, icon: AlertTriangle, color: 'text-destructive' },
-    { label: 'Active Pairs', value: pairCount, icon: Users, color: 'text-primary' },
+    { label: 'Completados', value: `${donePoints}/${totalPoints} SP`, icon: CheckCircle2, color: 'text-success' },
+    { label: 'En Progreso', value: inProgress.length, icon: Clock, color: 'text-accent' },
+    { label: 'Bugs Críticos', value: criticalBugs.length, icon: AlertTriangle, color: 'text-destructive' },
+    { label: 'Parejas Activas', value: pairCount, icon: Users, color: 'text-primary' },
   ];
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground text-sm">{iter?.name || 'No active iteration'}</p>
+        <h1 className="text-2xl font-bold">Panel</h1>
+        <p className="text-muted-foreground text-sm">{iter?.name || 'Sin iteración activa'}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -56,7 +56,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" /> Velocity Tracking
+              <Activity className="h-4 w-4 text-primary" /> Seguimiento de Velocidad
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -66,8 +66,8 @@ export default function DashboardPage() {
                 <XAxis dataKey="name" fontSize={12} />
                 <YAxis fontSize={12} />
                 <Tooltip />
-                <Bar dataKey="velocity" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Velocity" />
-                <Bar dataKey="planned" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Planned" />
+                <Bar dataKey="velocidad" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Velocidad" />
+                <Bar dataKey="planificado" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Planificado" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -75,7 +75,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Recent Stories</CardTitle>
+            <CardTitle className="text-base">Historias Recientes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {stories.slice(0, 5).map((s) => (
@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Team Overview</CardTitle>
+          <CardTitle className="text-base">Resumen del Equipo</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -105,7 +105,7 @@ export default function DashboardPage() {
                     {m.name.split(' ').map((n) => n[0]).join('')}
                   </div>
                   <p className="text-sm font-medium mt-1.5">{m.name}</p>
-                  <p className="text-xs text-muted-foreground">{assigned.length} active</p>
+                  <p className="text-xs text-muted-foreground">{assigned.length} activas</p>
                 </div>
               );
             })}

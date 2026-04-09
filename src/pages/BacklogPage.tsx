@@ -27,11 +27,11 @@ export default function BacklogPage() {
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Product Backlog</h1>
-          <p className="text-sm text-muted-foreground">{backlog.length} stories · {totalPoints} story points</p>
+          <h1 className="text-2xl font-bold">Backlog del Producto</h1>
+          <p className="text-sm text-muted-foreground">{backlog.length} historias · {totalPoints} puntos de historia</p>
         </div>
         <Button onClick={() => { setEditStory(null); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-1" /> Add Story
+          <Plus className="h-4 w-4 mr-1" /> Agregar Historia
         </Button>
       </div>
 

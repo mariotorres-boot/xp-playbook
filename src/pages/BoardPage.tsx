@@ -32,11 +32,11 @@ export default function BoardPage() {
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold">Kanban Board</h1>
-          <p className="text-sm text-muted-foreground">Iteration {currentIteration}</p>
+          <h1 className="text-2xl font-bold">Tablero Kanban</h1>
+          <p className="text-sm text-muted-foreground">Iteración {currentIteration}</p>
         </div>
         <Button onClick={() => { setEditStory(null); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-1" /> New Story
+          <Plus className="h-4 w-4 mr-1" /> Nueva Historia
         </Button>
       </div>
 

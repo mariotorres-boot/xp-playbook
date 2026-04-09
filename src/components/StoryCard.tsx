@@ -61,7 +61,7 @@ export function StoryCard({ story, index, onClick }: StoryCardProps) {
                 )}
                 {story.pair && (
                   <span className="flex items-center gap-0.5 text-xs text-primary">
-                    <Users className="h-3 w-3" /> Pair
+                    <Users className="h-3 w-3" /> Pareja
                   </span>
                 )}
               </div>
