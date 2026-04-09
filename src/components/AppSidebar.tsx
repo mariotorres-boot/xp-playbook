@@ -8,12 +8,12 @@ import {
 import { useProjectStore } from '@/store/useProjectStore';
 
 const navItems = [
-  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Kanban Board', url: '/board', icon: Columns3 },
+  { title: 'Panel', url: '/dashboard', icon: LayoutDashboard },
+  { title: 'Tablero Kanban', url: '/board', icon: Columns3 },
   { title: 'Backlog', url: '/backlog', icon: List },
-  { title: 'Iterations', url: '/iterations', icon: RotateCcw },
-  { title: 'Release Planning', url: '/releases', icon: CalendarRange },
-  { title: 'Team & Pairs', url: '/team', icon: Users },
+  { title: 'Iteraciones', url: '/iterations', icon: RotateCcw },
+  { title: 'Planificación', url: '/releases', icon: CalendarRange },
+  { title: 'Equipo y Parejas', url: '/team', icon: Users },
 ];
 
 export function AppSidebar() {
@@ -53,7 +53,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-2">
         <SidebarMenuButton onClick={logout} className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/60">
           <LogOut className="mr-2 h-4 w-4" />
-          {!collapsed && <span>Logout</span>}
+          {!collapsed && <span>Cerrar Sesión</span>}
         </SidebarMenuButton>
       </SidebarFooter>
     </Sidebar>

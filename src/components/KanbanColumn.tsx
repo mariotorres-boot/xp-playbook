@@ -4,9 +4,9 @@ import type { UserStory, Status } from '@/types/xp';
 
 const columnMeta: Record<Status, { label: string; color: string }> = {
   backlog: { label: 'Backlog', color: 'bg-muted-foreground' },
-  todo: { label: 'To Do', color: 'bg-info' },
-  'in-progress': { label: 'In Progress', color: 'bg-accent' },
-  done: { label: 'Done', color: 'bg-success' },
+  todo: { label: 'Por Hacer', color: 'bg-info' },
+  'in-progress': { label: 'En Progreso', color: 'bg-accent' },
+  done: { label: 'Hecho', color: 'bg-success' },
 };
 
 interface KanbanColumnProps {

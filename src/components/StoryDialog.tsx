@@ -59,46 +59,46 @@ export function StoryDialog({ open, onOpenChange, story }: StoryDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit Story' : 'New Story'}</DialogTitle>
+          <DialogTitle>{isEdit ? 'Editar Historia' : 'Nueva Historia'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Title</Label>
-            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Story title" />
+            <Label>Título</Label>
+            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Título de la historia" />
           </div>
           <div>
-            <Label>Description</Label>
+            <Label>Descripción</Label>
             <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Type</Label>
+              <Label>Tipo</Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as CardType })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user-story">User Story</SelectItem>
-                  <SelectItem value="task">Task</SelectItem>
+                  <SelectItem value="user-story">Historia de Usuario</SelectItem>
+                  <SelectItem value="task">Tarea</SelectItem>
                   <SelectItem value="bug">Bug</SelectItem>
-                  <SelectItem value="tdd-task">TDD Task</SelectItem>
+                  <SelectItem value="tdd-task">Tarea TDD</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Priority</Label>
+              <Label>Prioridad</Label>
               <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v as Priority })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="critical">Critical</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="critical">Crítica</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
+                  <SelectItem value="medium">Media</SelectItem>
+                  <SelectItem value="low">Baja</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Story Points</Label>
+              <Label>Puntos de Historia</Label>
               <Select value={String(form.storyPoints)} onValueChange={(v) => setForm({ ...form, storyPoints: Number(v) })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -109,23 +109,23 @@ export function StoryDialog({ open, onOpenChange, story }: StoryDialogProps) {
               </Select>
             </div>
             <div>
-              <Label>Status</Label>
+              <Label>Estado</Label>
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as Status })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="backlog">Backlog</SelectItem>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
+                  <SelectItem value="todo">Por Hacer</SelectItem>
+                  <SelectItem value="in-progress">En Progreso</SelectItem>
+                  <SelectItem value="done">Hecho</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Assignee</Label>
+              <Label>Responsable</Label>
               <Select value={form.assignee} onValueChange={(v) => setForm({ ...form, assignee: v })}>
-                <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
                 <SelectContent>
                   {developers.map((m) => (
                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
@@ -134,11 +134,11 @@ export function StoryDialog({ open, onOpenChange, story }: StoryDialogProps) {
               </Select>
             </div>
             <div>
-              <Label>Iteration</Label>
+              <Label>Iteración</Label>
               <Select value={String(form.iteration)} onValueChange={(v) => setForm({ ...form, iteration: Number(v) })}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Ninguna" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">None</SelectItem>
+                  <SelectItem value="0">Ninguna</SelectItem>
                   {iterations.map((it) => (
                     <SelectItem key={it.id} value={String(it.id)}>{it.name}</SelectItem>
                   ))}
@@ -148,9 +148,9 @@ export function StoryDialog({ open, onOpenChange, story }: StoryDialogProps) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Pair: Driver</Label>
+              <Label>Pareja: Conductor</Label>
               <Select value={form.pairDriver} onValueChange={(v) => setForm({ ...form, pairDriver: v })}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
                 <SelectContent>
                   {developers.map((m) => (
                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
@@ -159,9 +159,9 @@ export function StoryDialog({ open, onOpenChange, story }: StoryDialogProps) {
               </Select>
             </div>
             <div>
-              <Label>Pair: Navigator</Label>
+              <Label>Pareja: Navegador</Label>
               <Select value={form.pairNavigator} onValueChange={(v) => setForm({ ...form, pairNavigator: v })}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
                 <SelectContent>
                   {developers.map((m) => (
                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
@@ -172,13 +172,13 @@ export function StoryDialog({ open, onOpenChange, story }: StoryDialogProps) {
           </div>
           {(form.type === 'tdd-task' || form.type === 'user-story') && (
             <div>
-              <Label>Test / Acceptance Criteria</Label>
-              <Textarea value={form.testCriteria} onChange={(e) => setForm({ ...form, testCriteria: e.target.value })} rows={2} placeholder="Define test criteria..." />
+              <Label>Criterios de Prueba / Aceptación</Label>
+              <Textarea value={form.testCriteria} onChange={(e) => setForm({ ...form, testCriteria: e.target.value })} rows={2} placeholder="Definir criterios de prueba..." />
             </div>
           )}
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={handleSave}>{isEdit ? 'Update' : 'Create'}</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button onClick={handleSave}>{isEdit ? 'Actualizar' : 'Crear'}</Button>
           </div>
         </div>
       </DialogContent>

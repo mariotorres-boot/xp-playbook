@@ -9,7 +9,7 @@ export default function IterationsPage() {
 
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Iterations</h1>
+      <h1 className="text-2xl font-bold">Iteraciones</h1>
       <div className="space-y-4">
         {iterations.map((iter) => {
           const iterStories = stories.filter((s) => s.iteration === iter.id);
@@ -25,7 +25,7 @@ export default function IterationsPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     {iter.name}
-                    {isCurrent && <Badge className="bg-primary text-primary-foreground text-[10px]">Current</Badge>}
+                    {isCurrent && <Badge className="bg-primary text-primary-foreground text-[10px]">Actual</Badge>}
                   </CardTitle>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <CalendarDays className="h-3.5 w-3.5" />
@@ -36,9 +36,9 @@ export default function IterationsPage() {
               <CardContent className="space-y-3">
                 <Progress value={progress} className="h-2" />
                 <div className="flex gap-4 text-sm">
-                  <span><strong>{iterStories.length}</strong> stories</span>
-                  <span><strong>{donePoints}/{totalPoints}</strong> SP completed</span>
-                  <span>Velocity: <strong>{iter.velocity || '—'}</strong></span>
+                  <span><strong>{iterStories.length}</strong> historias</span>
+                  <span><strong>{donePoints}/{totalPoints}</strong> SP completados</span>
+                  <span>Velocidad: <strong>{iter.velocity || '—'}</strong></span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {iterStories.map((s) => (
