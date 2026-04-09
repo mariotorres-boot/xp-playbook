@@ -10,7 +10,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const login = useProjectStore((s) => s.login);
+  const isLoggedIn = useProjectStore((s) => s.isLoggedIn);
 
+  if (isLoggedIn) return <Navigate to="/dashboard" replace />;
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) login(email.trim());
