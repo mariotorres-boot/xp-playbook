@@ -42,7 +42,10 @@ export default function LoginPage() {
             />
             <Button type="submit" className="w-full">Sign In</Button>
           </form>
-          <p className="text-xs text-muted-foreground text-center mt-4">Demo: enter any email to continue</p>
+          <Button variant="outline" className="w-full mt-3" onClick={() => login('demo@xp-project.com')}>
+            Acceso Demo Rápido
+          </Button>
+          <p className="text-xs text-muted-foreground text-center mt-4">O ingresa cualquier email arriba</p>
         </CardContent>
       </Card>
     </div>
