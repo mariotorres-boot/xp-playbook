@@ -12,38 +12,41 @@ interface StoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   story?: UserStory | null;
+  defaultStatus?: Status;
+  defaultIteration?: number;
 }
 
-export function StoryDialog({ open, onOpenChange, story }: StoryDialogProps) {
-  const { team, iterations, addStory, updateStory } = useProjectStore();
+export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultIteration }: StoryDialogProps) {
+  const { team, iterations, groups, addStory, updateStory } = useProjectStore();
   const isEdit = !!story;
 
   const [form, setForm] = useState({
-    title: '', description: '', assignee: '', pairDriver: '', pairNavigator: '',
-    priority: 'medium' as Priority, storyPoints: 3, status: 'backlog' as Status,
-    iteration: 0, type: 'user-story' as CardType, testCriteria: '',
+    title: '', description: '', assignee: '', groupId: '',
+    priority: 'medium' as Priority, storyPoints: 3, status: (defaultStatus || 'backlog') as Status,
+    iteration: defaultIteration || 0, type: 'user-story' as CardType, testCriteria: '',
   });
 
   useEffect(() => {
     if (story) {
       setForm({
         title: story.title, description: story.description, assignee: story.assignee || '',
-        pairDriver: story.pair?.driver || '', pairNavigator: story.pair?.navigator || '',
+        groupId: story.groupId || '',
         priority: story.priority, storyPoints: story.storyPoints, status: story.status,
         iteration: story.iteration || 0, type: story.type, testCriteria: story.testCriteria || '',
       });
     } else {
-      setForm({ title: '', description: '', assignee: '', pairDriver: '', pairNavigator: '',
-        priority: 'medium', storyPoints: 3, status: 'backlog', iteration: 0, type: 'user-story', testCriteria: '' });
+      setForm({ title: '', description: '', assignee: '', groupId: '',
+        priority: 'medium', storyPoints: 3, status: defaultStatus || 'backlog',
+        iteration: defaultIteration || 0, type: 'user-story', testCriteria: '' });
     }
-  }, [story, open]);
+  }, [story, open, defaultStatus, defaultIteration]);
 
   const handleSave = () => {
     if (!form.title.trim()) return;
     const data: UserStory = {
       id: story?.id || `s${Date.now()}`,
       title: form.title, description: form.description, assignee: form.assignee || undefined,
-      pair: form.pairDriver && form.pairNavigator ? { driver: form.pairDriver, navigator: form.pairNavigator } : undefined,
+      groupId: form.groupId || undefined,
       priority: form.priority, storyPoints: form.storyPoints, status: form.status,
       iteration: form.iteration || undefined, type: form.type, createdAt: story?.createdAt || new Date().toISOString().split('T')[0],
       testCriteria: form.testCriteria || undefined,
@@ -59,12 +62,12 @@ export function StoryDialog({ open, onOpenChange, story }: StoryDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Editar Historia' : 'Nueva Historia'}</DialogTitle>
+          <DialogTitle>{isEdit ? 'Editar Actividad' : 'Nueva Actividad'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <Label>Título</Label>
-            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Título de la historia" />
+            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Título de la actividad" />
           </div>
           <div>
             <Label>Descripción</Label>
@@ -146,29 +149,17 @@ export function StoryDialog({ open, onOpenChange, story }: StoryDialogProps) {
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Pareja: Conductor</Label>
-              <Select value={form.pairDriver} onValueChange={(v) => setForm({ ...form, pairDriver: v })}>
-                <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
-                <SelectContent>
-                  {developers.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Pareja: Navegador</Label>
-              <Select value={form.pairNavigator} onValueChange={(v) => setForm({ ...form, pairNavigator: v })}>
-                <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
-                <SelectContent>
-                  {developers.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label>Grupo</Label>
+            <Select value={form.groupId} onValueChange={(v) => setForm({ ...form, groupId: v })}>
+              <SelectTrigger><SelectValue placeholder="Sin grupo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Sin grupo</SelectItem>
+                {groups.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           {(form.type === 'tdd-task' || form.type === 'user-story') && (
             <div>

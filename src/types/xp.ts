@@ -9,9 +9,10 @@ export interface TeamMember {
   role: 'developer' | 'tester' | 'coach';
 }
 
-export interface PairAssignment {
-  driver: string;
-  navigator: string;
+export interface Group {
+  id: string;
+  name: string;
+  members: string[]; // team member IDs
 }
 
 export interface UserStory {
@@ -19,7 +20,7 @@ export interface UserStory {
   title: string;
   description: string;
   assignee?: string;
-  pair?: PairAssignment;
+  groupId?: string;
   priority: Priority;
   storyPoints: number;
   status: Status;
@@ -36,7 +37,7 @@ export interface Iteration {
   startDate: string;
   endDate: string;
   velocity?: number;
-  stories: string[]; // story IDs
+  stories: string[];
 }
 
 export interface Release {

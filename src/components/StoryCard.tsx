@@ -27,7 +27,9 @@ interface StoryCardProps {
 
 export function StoryCard({ story, index, onClick }: StoryCardProps) {
   const team = useProjectStore((s) => s.team);
+  const groups = useProjectStore((s) => s.groups);
   const assignee = team.find((m) => m.id === story.assignee);
+  const group = groups.find((g) => g.id === story.groupId);
 
   return (
     <Draggable draggableId={story.id} index={index}>
@@ -59,9 +61,9 @@ export function StoryCard({ story, index, onClick }: StoryCardProps) {
                 {assignee && (
                   <span className="text-xs text-muted-foreground">{assignee.name.split(' ')[0]}</span>
                 )}
-                {story.pair && (
+                {group && (
                   <span className="flex items-center gap-0.5 text-xs text-primary">
-                    <Users className="h-3 w-3" /> Pareja
+                    <Users className="h-3 w-3" /> {group.name}
                   </span>
                 )}
               </div>
