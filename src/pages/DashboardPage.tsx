@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { Activity, CheckCircle2, Clock, AlertTriangle, Users } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { stories, iterations, team, currentIteration } = useProjectStore();
+  const { stories, iterations, team, groups, currentIteration } = useProjectStore();
 
   const iter = iterations.find((i) => i.id === currentIteration);
   const iterStories = stories.filter((s) => s.iteration === currentIteration);
@@ -14,7 +14,6 @@ export default function DashboardPage() {
   const donePoints = done.reduce((sum, s) => sum + s.storyPoints, 0);
   const totalPoints = iterStories.reduce((sum, s) => sum + s.storyPoints, 0);
   const criticalBugs = stories.filter((s) => s.type === 'bug' && s.priority === 'critical' && s.status !== 'done');
-  const pairCount = iterStories.filter((s) => s.pair).length;
 
   const velocityData = iterations.map((it) => ({
     name: `Iter ${it.id}`,
@@ -26,7 +25,7 @@ export default function DashboardPage() {
     { label: 'Completados', value: `${donePoints}/${totalPoints} SP`, icon: CheckCircle2, color: 'text-success' },
     { label: 'En Progreso', value: inProgress.length, icon: Clock, color: 'text-accent' },
     { label: 'Bugs Críticos', value: criticalBugs.length, icon: AlertTriangle, color: 'text-destructive' },
-    { label: 'Parejas Activas', value: pairCount, icon: Users, color: 'text-primary' },
+    { label: 'Grupos', value: groups.length, icon: Users, color: 'text-primary' },
   ];
 
   return (
@@ -75,7 +74,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Historias Recientes</CardTitle>
+            <CardTitle className="text-base">Actividades Recientes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {stories.slice(0, 5).map((s) => (

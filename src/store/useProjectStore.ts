@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { UserStory, Iteration, TeamMember, Status } from '@/types/xp';
+import type { UserStory, Iteration, TeamMember, Group, Status } from '@/types/xp';
 
 const SAMPLE_TEAM: TeamMember[] = [
   { id: '1', name: 'Alice Chen', role: 'developer' },
@@ -10,11 +10,16 @@ const SAMPLE_TEAM: TeamMember[] = [
   { id: '5', name: 'Eve Johnson', role: 'coach' },
 ];
 
+const SAMPLE_GROUPS: Group[] = [
+  { id: 'g1', name: 'Frontend', members: ['1', '3'] },
+  { id: 'g2', name: 'Backend', members: ['2', '4'] },
+];
+
 const SAMPLE_STORIES: UserStory[] = [
-  { id: 's1', title: 'User authentication flow', description: 'As a user I want to log in so I can access my projects', assignee: '1', pair: { driver: '1', navigator: '2' }, priority: 'high', storyPoints: 5, status: 'in-progress', iteration: 1, type: 'user-story', createdAt: '2026-04-01', testCriteria: 'User can sign in with email and password' },
+  { id: 's1', title: 'User authentication flow', description: 'As a user I want to log in so I can access my projects', assignee: '1', groupId: 'g1', priority: 'high', storyPoints: 5, status: 'in-progress', iteration: 1, type: 'user-story', createdAt: '2026-04-01', testCriteria: 'User can sign in with email and password' },
   { id: 's2', title: 'Dashboard analytics widget', description: 'Display velocity chart and iteration progress', assignee: '3', priority: 'medium', storyPoints: 3, status: 'todo', iteration: 1, type: 'user-story', createdAt: '2026-04-02' },
   { id: 's3', title: 'Setup CI/CD pipeline', description: 'Configure automated testing and deployment', assignee: '2', priority: 'critical', storyPoints: 8, status: 'done', iteration: 1, type: 'task', createdAt: '2026-03-28', testCriteria: 'All tests pass on push to main' },
-  { id: 's4', title: 'Write unit tests for auth module', description: 'TDD: Write tests before implementation', assignee: '4', pair: { driver: '4', navigator: '1' }, priority: 'high', storyPoints: 3, status: 'in-progress', iteration: 1, type: 'tdd-task', createdAt: '2026-04-03', testCriteria: '90% code coverage on auth module' },
+  { id: 's4', title: 'Write unit tests for auth', description: 'TDD: Write tests before implementation', assignee: '4', groupId: 'g2', priority: 'high', storyPoints: 3, status: 'in-progress', iteration: 1, type: 'tdd-task', createdAt: '2026-04-03', testCriteria: '90% code coverage on auth module' },
   { id: 's5', title: 'API rate limiting', description: 'Implement rate limiting for all API endpoints', priority: 'medium', storyPoints: 5, status: 'backlog', type: 'user-story', createdAt: '2026-04-04' },
   { id: 's6', title: 'Mobile responsive layout', description: 'Ensure all views work on mobile devices', priority: 'low', storyPoints: 3, status: 'backlog', type: 'user-story', createdAt: '2026-04-05' },
   { id: 's7', title: 'Fix login redirect bug', description: 'Users are not redirected after login', assignee: '1', priority: 'critical', storyPoints: 2, status: 'todo', iteration: 1, type: 'bug', createdAt: '2026-04-06' },
@@ -22,15 +27,16 @@ const SAMPLE_STORIES: UserStory[] = [
 ];
 
 const SAMPLE_ITERATIONS: Iteration[] = [
-  { id: 1, name: 'Iteration 1 - Foundation', startDate: '2026-04-01', endDate: '2026-04-14', velocity: 18, stories: ['s1', 's2', 's3', 's4', 's7'] },
-  { id: 2, name: 'Iteration 2 - Features', startDate: '2026-04-15', endDate: '2026-04-28', stories: [] },
-  { id: 3, name: 'Iteration 3 - Polish', startDate: '2026-04-29', endDate: '2026-05-12', stories: [] },
+  { id: 1, name: 'Iteración 1 - Base', startDate: '2026-04-01', endDate: '2026-04-14', velocity: 18, stories: ['s1', 's2', 's3', 's4', 's7'] },
+  { id: 2, name: 'Iteración 2 - Funcionalidades', startDate: '2026-04-15', endDate: '2026-04-28', stories: [] },
+  { id: 3, name: 'Iteración 3 - Pulido', startDate: '2026-04-29', endDate: '2026-05-12', stories: [] },
 ];
 
 interface ProjectState {
   stories: UserStory[];
   iterations: Iteration[];
   team: TeamMember[];
+  groups: Group[];
   currentIteration: number;
   isLoggedIn: boolean;
   currentUser: string;
@@ -39,6 +45,9 @@ interface ProjectState {
   moveStory: (id: string, status: Status) => void;
   reorderStories: (status: Status, sourceIndex: number, destIndex: number) => void;
   deleteStory: (id: string) => void;
+  addGroup: (group: Group) => void;
+  updateGroup: (id: string, updates: Partial<Group>) => void;
+  deleteGroup: (id: string) => void;
   login: (email: string) => void;
   logout: () => void;
 }
@@ -49,6 +58,7 @@ export const useProjectStore = create<ProjectState>()(
       stories: SAMPLE_STORIES,
       iterations: SAMPLE_ITERATIONS,
       team: SAMPLE_TEAM,
+      groups: SAMPLE_GROUPS,
       currentIteration: 1,
       isLoggedIn: false,
       currentUser: '',
@@ -68,6 +78,13 @@ export const useProjectStore = create<ProjectState>()(
       }),
       deleteStory: (id) => set((s) => ({
         stories: s.stories.filter((st) => st.id !== id),
+      })),
+      addGroup: (group) => set((s) => ({ groups: [...s.groups, group] })),
+      updateGroup: (id, updates) => set((s) => ({
+        groups: s.groups.map((g) => (g.id === id ? { ...g, ...updates } : g)),
+      })),
+      deleteGroup: (id) => set((s) => ({
+        groups: s.groups.filter((g) => g.id !== id),
       })),
       login: (email) => set({ isLoggedIn: true, currentUser: email }),
       logout: () => set({ isLoggedIn: false, currentUser: '' }),

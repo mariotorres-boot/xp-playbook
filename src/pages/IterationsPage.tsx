@@ -1,11 +1,22 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useProjectStore } from '@/store/useProjectStore';
 import { CalendarDays } from 'lucide-react';
+import type { UserStory } from '@/types/xp';
+
+const statusLabels: Record<string, string> = {
+  backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', done: 'Hecho',
+};
+const priorityLabels: Record<string, string> = {
+  critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja',
+};
 
 export default function IterationsPage() {
-  const { iterations, stories, currentIteration } = useProjectStore();
+  const { iterations, stories, currentIteration, team, groups } = useProjectStore();
+  const [selectedStory, setSelectedStory] = useState<UserStory | null>(null);
 
   return (
     <div className="p-6 space-y-4">
@@ -36,14 +47,19 @@ export default function IterationsPage() {
               <CardContent className="space-y-3">
                 <Progress value={progress} className="h-2" />
                 <div className="flex gap-4 text-sm">
-                  <span><strong>{iterStories.length}</strong> historias</span>
+                  <span><strong>{iterStories.length}</strong> actividades</span>
                   <span><strong>{donePoints}/{totalPoints}</strong> SP completados</span>
                   <span>Velocidad: <strong>{iter.velocity || '—'}</strong></span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {iterStories.map((s) => (
-                    <Badge key={s.id} variant={s.status === 'done' ? 'default' : 'outline'} className="text-xs">
-                      {s.title.slice(0, 25)}{s.title.length > 25 ? '…' : ''}
+                    <Badge
+                      key={s.id}
+                      variant={s.status === 'done' ? 'default' : 'outline'}
+                      className="text-xs cursor-pointer hover:ring-1 hover:ring-primary transition-all"
+                      onClick={() => setSelectedStory(s)}
+                    >
+                      {s.title.slice(0, 30)}{s.title.length > 30 ? '…' : ''}
                     </Badge>
                   ))}
                 </div>
@@ -52,6 +68,34 @@ export default function IterationsPage() {
           );
         })}
       </div>
+
+      <Dialog open={!!selectedStory} onOpenChange={() => setSelectedStory(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedStory?.title}</DialogTitle>
+          </DialogHeader>
+          {selectedStory && (
+            <div className="space-y-3 text-sm">
+              <p className="text-muted-foreground">{selectedStory.description}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div><strong>Estado:</strong> {statusLabels[selectedStory.status]}</div>
+                <div><strong>Prioridad:</strong> {priorityLabels[selectedStory.priority]}</div>
+                <div><strong>Tipo:</strong> {selectedStory.type}</div>
+                <div><strong>Puntos:</strong> {selectedStory.storyPoints} SP</div>
+                <div><strong>Responsable:</strong> {team.find(m => m.id === selectedStory.assignee)?.name || 'Sin asignar'}</div>
+                <div><strong>Grupo:</strong> {groups.find(g => g.id === selectedStory.groupId)?.name || 'Sin grupo'}</div>
+              </div>
+              {selectedStory.testCriteria && (
+                <div>
+                  <strong>Criterios de Prueba:</strong>
+                  <p className="text-muted-foreground mt-1">{selectedStory.testCriteria}</p>
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground">Creado: {selectedStory.createdAt}</div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

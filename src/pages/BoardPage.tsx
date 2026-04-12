@@ -32,11 +32,11 @@ export default function BoardPage() {
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold">Tablero Kanban</h1>
+          <h1 className="text-2xl font-bold">Tablero</h1>
           <p className="text-sm text-muted-foreground">Iteración {currentIteration}</p>
         </div>
         <Button onClick={() => { setEditStory(null); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-1" /> Nueva Historia
+          <Plus className="h-4 w-4 mr-1" /> Nueva Actividad
         </Button>
       </div>
 
@@ -53,7 +53,13 @@ export default function BoardPage() {
         </div>
       </DragDropContext>
 
-      <StoryDialog open={dialogOpen} onOpenChange={setDialogOpen} story={editStory} />
+      <StoryDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        story={editStory}
+        defaultStatus="todo"
+        defaultIteration={currentIteration}
+      />
     </div>
   );
 }

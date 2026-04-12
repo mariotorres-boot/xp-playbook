@@ -9,11 +9,11 @@ import { useProjectStore } from '@/store/useProjectStore';
 
 const navItems = [
   { title: 'Panel', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Tablero Kanban', url: '/board', icon: Columns3 },
+  { title: 'Tablero', url: '/board', icon: Columns3 },
   { title: 'Backlog', url: '/backlog', icon: List },
   { title: 'Iteraciones', url: '/iterations', icon: RotateCcw },
   { title: 'Planificación', url: '/releases', icon: CalendarRange },
-  { title: 'Equipo y Parejas', url: '/team', icon: Users },
+  { title: 'Equipo y Grupos', url: '/team', icon: Users },
 ];
 
 export function AppSidebar() {
