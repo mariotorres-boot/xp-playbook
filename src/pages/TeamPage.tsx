@@ -65,7 +65,7 @@ export default function TeamPage() {
                   </div>
                   <div>
                     <p className="font-medium">{m.name}</p>
-                    <Badge variant="outline" className="text-xs capitalize">{m.role}</Badge>
+                    <Badge variant="outline" className="text-xs capitalize">{{ developer: 'Desarrollador', tester: 'Probador', coach: 'Coach' }[m.role] || m.role}</Badge>
                   </div>
                 </div>
                 <div className="mt-3 text-sm text-muted-foreground">
@@ -126,7 +126,7 @@ export default function TeamPage() {
           <div className="space-y-4">
             <div>
               <Label>Nombre del grupo</Label>
-              <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Ej: Frontend" />
+              <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Ej: Equipo Frontend" />
             </div>
             <div>
               <Label>Miembros</Label>
@@ -138,7 +138,7 @@ export default function TeamPage() {
                       onCheckedChange={() => toggleMember(m.id)}
                     />
                     <span className="text-sm">{m.name}</span>
-                    <Badge variant="outline" className="text-[10px]">{m.role}</Badge>
+                    <Badge variant="outline" className="text-[10px]">{{ developer: 'Desarrollador', tester: 'Probador', coach: 'Coach' }[m.role] || m.role}</Badge>
                   </div>
                 ))}
               </div>

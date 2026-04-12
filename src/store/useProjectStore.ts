@@ -16,14 +16,14 @@ const SAMPLE_GROUPS: Group[] = [
 ];
 
 const SAMPLE_STORIES: UserStory[] = [
-  { id: 's1', title: 'User authentication flow', description: 'As a user I want to log in so I can access my projects', assignee: '1', groupId: 'g1', priority: 'high', storyPoints: 5, status: 'in-progress', iteration: 1, type: 'user-story', createdAt: '2026-04-01', testCriteria: 'User can sign in with email and password' },
-  { id: 's2', title: 'Dashboard analytics widget', description: 'Display velocity chart and iteration progress', assignee: '3', priority: 'medium', storyPoints: 3, status: 'todo', iteration: 1, type: 'user-story', createdAt: '2026-04-02' },
-  { id: 's3', title: 'Setup CI/CD pipeline', description: 'Configure automated testing and deployment', assignee: '2', priority: 'critical', storyPoints: 8, status: 'done', iteration: 1, type: 'task', createdAt: '2026-03-28', testCriteria: 'All tests pass on push to main' },
-  { id: 's4', title: 'Write unit tests for auth', description: 'TDD: Write tests before implementation', assignee: '4', groupId: 'g2', priority: 'high', storyPoints: 3, status: 'in-progress', iteration: 1, type: 'tdd-task', createdAt: '2026-04-03', testCriteria: '90% code coverage on auth module' },
-  { id: 's5', title: 'API rate limiting', description: 'Implement rate limiting for all API endpoints', priority: 'medium', storyPoints: 5, status: 'backlog', type: 'user-story', createdAt: '2026-04-04' },
-  { id: 's6', title: 'Mobile responsive layout', description: 'Ensure all views work on mobile devices', priority: 'low', storyPoints: 3, status: 'backlog', type: 'user-story', createdAt: '2026-04-05' },
-  { id: 's7', title: 'Fix login redirect bug', description: 'Users are not redirected after login', assignee: '1', priority: 'critical', storyPoints: 2, status: 'todo', iteration: 1, type: 'bug', createdAt: '2026-04-06' },
-  { id: 's8', title: 'Database migration scripts', description: 'Create migration system for schema changes', priority: 'high', storyPoints: 5, status: 'backlog', type: 'task', createdAt: '2026-04-01' },
+  { id: 's1', title: 'Flujo de autenticación de usuarios', description: 'Como usuario quiero iniciar sesión para acceder a mis proyectos', assignee: '1', groupId: 'g1', priority: 'high', storyPoints: 5, status: 'in-progress', iteration: 1, type: 'user-story', createdAt: '2026-04-01', testCriteria: 'El usuario puede iniciar sesión con correo y contraseña' },
+  { id: 's2', title: 'Widget de analíticas del panel', description: 'Mostrar gráfico de velocidad y progreso de iteración', assignee: '3', priority: 'medium', storyPoints: 3, status: 'todo', iteration: 1, type: 'user-story', createdAt: '2026-04-02' },
+  { id: 's3', title: 'Configurar pipeline CI/CD', description: 'Configurar pruebas automatizadas y despliegue', assignee: '2', priority: 'critical', storyPoints: 8, status: 'done', iteration: 1, type: 'task', createdAt: '2026-03-28', testCriteria: 'Todas las pruebas pasan al hacer push a main' },
+  { id: 's4', title: 'Escribir pruebas unitarias para autenticación', description: 'TDD: Escribir pruebas antes de la implementación', assignee: '4', groupId: 'g2', priority: 'high', storyPoints: 3, status: 'in-progress', iteration: 1, type: 'tdd-task', createdAt: '2026-04-03', testCriteria: '90% de cobertura de código en módulo de autenticación' },
+  { id: 's5', title: 'Limitación de tasa en API', description: 'Implementar limitación de tasa para todos los endpoints de la API', priority: 'medium', storyPoints: 5, status: 'backlog', type: 'user-story', createdAt: '2026-04-04' },
+  { id: 's6', title: 'Diseño responsivo móvil', description: 'Asegurar que todas las vistas funcionen en dispositivos móviles', priority: 'low', storyPoints: 3, status: 'backlog', type: 'user-story', createdAt: '2026-04-05' },
+  { id: 's7', title: 'Corregir bug de redirección en login', description: 'Los usuarios no son redirigidos después de iniciar sesión', assignee: '1', priority: 'critical', storyPoints: 2, status: 'todo', iteration: 1, type: 'bug', createdAt: '2026-04-06' },
+  { id: 's8', title: 'Scripts de migración de base de datos', description: 'Crear sistema de migración para cambios de esquema', priority: 'high', storyPoints: 5, status: 'backlog', type: 'task', createdAt: '2026-04-01' },
 ];
 
 const SAMPLE_ITERATIONS: Iteration[] = [
@@ -89,6 +89,6 @@ export const useProjectStore = create<ProjectState>()(
       login: (email) => set({ isLoggedIn: true, currentUser: email }),
       logout: () => set({ isLoggedIn: false, currentUser: '' }),
     }),
-    { name: 'xp-project-store' }
+    { name: 'xp-project-store-es' }
   )
 );

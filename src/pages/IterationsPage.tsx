@@ -80,7 +80,7 @@ export default function IterationsPage() {
               <div className="grid grid-cols-2 gap-2">
                 <div><strong>Estado:</strong> {statusLabels[selectedStory.status]}</div>
                 <div><strong>Prioridad:</strong> {priorityLabels[selectedStory.priority]}</div>
-                <div><strong>Tipo:</strong> {selectedStory.type}</div>
+                <div><strong>Tipo:</strong> {{ 'user-story': 'Historia de Usuario', 'task': 'Tarea', 'bug': 'Bug', 'tdd-task': 'Tarea TDD' }[selectedStory.type] || selectedStory.type}</div>
                 <div><strong>Puntos:</strong> {selectedStory.storyPoints} SP</div>
                 <div><strong>Responsable:</strong> {team.find(m => m.id === selectedStory.assignee)?.name || 'Sin asignar'}</div>
                 <div><strong>Grupo:</strong> {groups.find(g => g.id === selectedStory.groupId)?.name || 'Sin grupo'}</div>

@@ -49,7 +49,7 @@ export function StoryCard({ story, index, onClick }: StoryCardProps) {
             <div className="flex items-center gap-1.5 mb-2">
               <span className="text-muted-foreground">{typeIcons[story.type]}</span>
               <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${priorityColors[story.priority]}`}>
-                {story.priority}
+                {{ critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja' }[story.priority] || story.priority}
               </Badge>
               {story.type === 'tdd-task' && (
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-info text-info-foreground">TDD</Badge>
