@@ -59,11 +59,11 @@ export default function BacklogPage() {
                           <GripVertical className="h-4 w-4" />
                         </div>
                         <Badge variant="outline" className={`text-[10px] shrink-0 ${priorityColors[story.priority]}`}>
-                          {story.priority}
+                          {{ critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja' }[story.priority] || story.priority}
                         </Badge>
                         <span className="text-sm font-medium flex-1">{story.title}</span>
                         <Badge variant="secondary" className="text-xs">{story.storyPoints} SP</Badge>
-                        <Badge variant="outline" className="text-xs">{story.type}</Badge>
+                        <Badge variant="outline" className="text-xs">{{ 'user-story': 'Historia', 'task': 'Tarea', 'bug': 'Bug', 'tdd-task': 'TDD' }[story.type] || story.type}</Badge>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => handleEdit(story, e)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>

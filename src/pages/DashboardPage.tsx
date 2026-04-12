@@ -80,10 +80,10 @@ export default function DashboardPage() {
             {stories.slice(0, 5).map((s) => (
               <div key={s.id} className="flex items-center justify-between py-1.5 border-b last:border-0">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{{ 'user-story': 'Historia', 'task': 'Tarea', 'bug': 'Bug', 'tdd-task': 'TDD' }[s.type] || s.type}</Badge>
                   <span className="text-sm">{s.title}</span>
                 </div>
-                <Badge variant="secondary" className="text-xs">{s.status}</Badge>
+                <Badge variant="secondary" className="text-xs">{{ backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', done: 'Hecho' }[s.status] || s.status}</Badge>
               </div>
             ))}
           </CardContent>
