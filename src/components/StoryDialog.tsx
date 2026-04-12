@@ -151,7 +151,7 @@ export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultI
           </div>
           <div>
             <Label>Grupo</Label>
-            <Select value={form.groupId} onValueChange={(v) => setForm({ ...form, groupId: v })}>
+            <Select value={form.groupId || 'none'} onValueChange={(v) => setForm({ ...form, groupId: v === 'none' ? '' : v })}>
               <SelectTrigger><SelectValue placeholder="Sin grupo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Sin grupo</SelectItem>
