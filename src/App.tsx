@@ -8,6 +8,7 @@ import { useProjectStore } from "@/store/useProjectStore";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import BoardPage from "./pages/BoardPage";
+import BoardsOverviewPage from "./pages/BoardsOverviewPage";
 import BacklogPage from "./pages/BacklogPage";
 import IterationsPage from "./pages/IterationsPage";
 import ReleasesPage from "./pages/ReleasesPage";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<AuthGuard><DashboardPage /></AuthGuard>} />
+          <Route path="/boards" element={<AuthGuard><BoardsOverviewPage /></AuthGuard>} />
           <Route path="/board" element={<AuthGuard><BoardPage /></AuthGuard>} />
           <Route path="/backlog" element={<AuthGuard><BacklogPage /></AuthGuard>} />
           <Route path="/iterations" element={<AuthGuard><IterationsPage /></AuthGuard>} />
