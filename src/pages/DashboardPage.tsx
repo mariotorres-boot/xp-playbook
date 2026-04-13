@@ -5,15 +5,17 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { Activity, CheckCircle2, Clock, AlertTriangle, Users } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { stories, iterations, team, groups, currentIteration } = useProjectStore();
+  const { stories, iterations, team, groups, currentIteration, boards, currentBoardId } = useProjectStore();
 
+  const boardStories = stories.filter((s) => s.boardId === currentBoardId || (!s.boardId && currentBoardId === 'b1'));
   const iter = iterations.find((i) => i.id === currentIteration);
-  const iterStories = stories.filter((s) => s.iteration === currentIteration);
+  const iterStories = boardStories.filter((s) => s.iteration === currentIteration);
   const done = iterStories.filter((s) => s.status === 'done');
   const inProgress = iterStories.filter((s) => s.status === 'in-progress');
   const donePoints = done.reduce((sum, s) => sum + s.storyPoints, 0);
   const totalPoints = iterStories.reduce((sum, s) => sum + s.storyPoints, 0);
-  const criticalBugs = stories.filter((s) => s.type === 'bug' && s.priority === 'critical' && s.status !== 'done');
+  const criticalBugs = boardStories.filter((s) => s.type === 'bug' && s.priority === 'critical' && s.status !== 'done');
+  const currentBoard = boards.find(b => b.id === currentBoardId);
 
   const velocityData = iterations.map((it) => ({
     name: `Iter ${it.id}`,
@@ -31,7 +33,7 @@ export default function DashboardPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Panel</h1>
+        <h1 className="text-2xl font-bold">Panel — {currentBoard?.name || 'Tablero'}</h1>
         <p className="text-muted-foreground text-sm">{iter?.name || 'Sin iteración activa'}</p>
       </div>
 

@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Trash2 } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import type { UserStory, Priority, Status, CardType } from '@/types/xp';
 
@@ -17,7 +19,7 @@ interface StoryDialogProps {
 }
 
 export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultIteration }: StoryDialogProps) {
-  const { team, iterations, groups, addStory, updateStory } = useProjectStore();
+  const { team, iterations, groups, addStory, updateStory, deleteStory, currentBoardId } = useProjectStore();
   const isEdit = !!story;
 
   const [form, setForm] = useState({
@@ -48,13 +50,24 @@ export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultI
       title: form.title, description: form.description, assignee: form.assignee || undefined,
       groupId: form.groupId || undefined,
       priority: form.priority, storyPoints: form.storyPoints, status: form.status,
-      iteration: form.iteration || undefined, type: form.type, createdAt: story?.createdAt || new Date().toISOString().split('T')[0],
+      iteration: form.iteration || undefined, type: form.type,
+      createdAt: story?.createdAt || new Date().toISOString().split('T')[0],
       testCriteria: form.testCriteria || undefined,
+      boardId: story?.boardId || currentBoardId,
     };
     if (isEdit) updateStory(data.id, data);
     else addStory(data);
     onOpenChange(false);
   };
+
+  const handleDelete = () => {
+    if (story) {
+      deleteStory(story.id);
+      onOpenChange(false);
+    }
+  };
+
+  const canDelete = isEdit && story && story.status !== 'done';
 
   const developers = team.filter((m) => m.role === 'developer' || m.role === 'tester');
 
@@ -127,9 +140,10 @@ export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultI
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Responsable</Label>
-              <Select value={form.assignee} onValueChange={(v) => setForm({ ...form, assignee: v })}>
+              <Select value={form.assignee || 'none'} onValueChange={(v) => setForm({ ...form, assignee: v === 'none' ? '' : v })}>
                 <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Sin asignar</SelectItem>
                   {developers.map((m) => (
                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                   ))}
@@ -167,9 +181,34 @@ export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultI
               <Textarea value={form.testCriteria} onChange={(e) => setForm({ ...form, testCriteria: e.target.value })} rows={2} placeholder="Definir criterios de prueba..." />
             </div>
           )}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={handleSave}>{isEdit ? 'Actualizar' : 'Crear'}</Button>
+          <div className="flex items-center justify-between pt-2">
+            <div>
+              {canDelete && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar actividad?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. La actividad será eliminada permanentemente.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete}>Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button onClick={handleSave}>{isEdit ? 'Actualizar' : 'Crear'}</Button>
+            </div>
           </div>
         </div>
       </DialogContent>
