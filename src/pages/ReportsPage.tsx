@@ -1,15 +1,25 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useProjectStore } from '@/store/useProjectStore';
-import { FileDown, BarChart3, Users, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { FileDown, BarChart3, Users, CheckCircle2, Clock, AlertTriangle, Loader2 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const statusLabels: Record<string, string> = {
   backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', done: 'Hecho',
 };
+const priorityLabels: Record<string, string> = {
+  critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja',
+};
+const typeLabels: Record<string, string> = {
+  'user-story': 'Historia', task: 'Tarea', bug: 'Bug', 'tdd-task': 'TDD',
+};
 
 export default function ReportsPage() {
-  const { stories, iterations, team, groups, boards } = useProjectStore();
+  const { stories, iterations, team, groups, boards, currentBoardId } = useProjectStore();
+  const [generating, setGenerating] = useState(false);
 
   const totalStories = stories.length;
   const doneStories = stories.filter((s) => s.status === 'done');
@@ -33,45 +43,144 @@ export default function ReportsPage() {
     return { ...b, total: bStories.length, done: bDone.length, totalPoints: bTotal, donePoints: bDoneP };
   });
 
-  const handleDownloadPDF = () => {
-    const content = generateReportText();
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `reporte-proyecto-${new Date().toISOString().split('T')[0]}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const currentBoard = boards.find((b) => b.id === currentBoardId);
 
-  const generateReportText = () => {
-    let report = '=== REPORTE DE PROYECTO ===\n';
-    report += `Fecha: ${new Date().toLocaleDateString('es-ES')}\n\n`;
-    report += `--- RESUMEN GENERAL ---\n`;
-    report += `Total de actividades: ${totalStories}\n`;
-    report += `Completadas: ${doneStories.length} (${totalPoints > 0 ? Math.round((donePoints / totalPoints) * 100) : 0}%)\n`;
-    report += `En progreso: ${inProgressStories.length}\n`;
-    report += `Bugs críticos abiertos: ${criticalBugs.length}\n`;
-    report += `Puntos totales: ${totalPoints} | Completados: ${donePoints}\n\n`;
+  const handleDownloadPDF = async () => {
+    setGenerating(true);
+    // Use setTimeout to let the UI update before heavy work
+    await new Promise((r) => setTimeout(r, 50));
 
-    report += `--- TABLEROS ---\n`;
-    boardSummaries.forEach((b) => {
-      report += `${b.name}: ${b.done}/${b.total} actividades (${b.donePoints}/${b.totalPoints} SP)\n`;
-    });
+    try {
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageW = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      let y = 20;
 
-    report += `\n--- CARGA DE TRABAJO POR EQUIPO ---\n`;
-    teamWorkload.forEach((m) => {
-      report += `${m.name} (${m.role}): ${m.active} activas, ${m.total} totales, ${m.points} SP\n`;
-    });
+      // Header
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('XP Board', margin, y);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100);
+      const dateStr = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+      doc.text(`Reporte generado el ${dateStr}`, margin, y + 7);
+      doc.text(`Tablero: ${currentBoard?.name || 'Todos'}`, margin, y + 13);
+      doc.setTextColor(0);
 
-    report += `\n--- ITERACIONES ---\n`;
-    iterations.forEach((it) => {
-      const itStories = stories.filter((s) => s.iteration === it.id);
-      const itDone = itStories.filter((s) => s.status === 'done');
-      report += `${it.name}: ${itDone.length}/${itStories.length} completadas | Velocidad: ${it.velocity || '—'}\n`;
-    });
+      // Divider
+      y += 20;
+      doc.setDrawColor(200);
+      doc.line(margin, y, pageW - margin, y);
+      y += 8;
 
-    return report;
+      // KPIs
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Métricas Clave', margin, y);
+      y += 8;
+
+      const pctGeneral = totalPoints > 0 ? Math.round((donePoints / totalPoints) * 100) : 0;
+      const kpis = [
+        ['Total de Actividades', String(totalStories)],
+        ['Completadas', `${doneStories.length} (${pctGeneral}%)`],
+        ['En Progreso', String(inProgressStories.length)],
+        ['Bugs Críticos Abiertos', String(criticalBugs.length)],
+        ['Puntos Totales', String(totalPoints)],
+        ['Puntos Completados', String(donePoints)],
+      ];
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Métrica', 'Valor']],
+        body: kpis,
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 10 },
+      });
+
+      y = (doc as any).lastAutoTable.finalY + 10;
+
+      // Board summary
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Estado por Tablero', margin, y);
+      y += 6;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Tablero', 'Actividades', 'Completadas', 'Puntos', 'Avance']],
+        body: boardSummaries.map((b) => {
+          const pct = b.totalPoints > 0 ? Math.round((b.donePoints / b.totalPoints) * 100) : 0;
+          return [b.name, String(b.total), String(b.done), `${b.donePoints}/${b.totalPoints}`, `${pct}%`];
+        }),
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 9 },
+      });
+
+      y = (doc as any).lastAutoTable.finalY + 10;
+
+      // Team workload
+      if (y > 240) { doc.addPage(); y = 20; }
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Carga de Trabajo del Equipo', margin, y);
+      y += 6;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Miembro', 'Rol', 'Activas', 'Totales', 'Puntos']],
+        body: teamWorkload.map((m) => [
+          m.name,
+          m.role === 'developer' ? 'Desarrollador' : m.role === 'tester' ? 'Tester' : 'Coach',
+          String(m.active), String(m.total), String(m.points),
+        ]),
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 9 },
+      });
+
+      y = (doc as any).lastAutoTable.finalY + 10;
+
+      // Activity table
+      if (y > 200) { doc.addPage(); y = 20; }
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Detalle de Actividades', margin, y);
+      y += 6;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Título', 'Tipo', 'Prioridad', 'Estado', 'SP', 'Asignado']],
+        body: stories.map((s) => {
+          const assignee = team.find((t) => t.id === s.assignee);
+          return [
+            s.title,
+            typeLabels[s.type] || s.type,
+            priorityLabels[s.priority] || s.priority,
+            statusLabels[s.status] || s.status,
+            String(s.storyPoints),
+            assignee?.name || '—',
+          ];
+        }),
+        margin: { left: margin, right: margin },
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 2 },
+        columnStyles: { 0: { cellWidth: 55 } },
+      });
+
+      // Dynamic filename
+      const boardName = (currentBoard?.name || 'General').replace(/\s+/g, '_');
+      const dateFile = new Date().toISOString().split('T')[0];
+      doc.save(`Reporte_Tablero_${boardName}_${dateFile}.pdf`);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -81,8 +190,9 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-bold">Reportes</h1>
           <p className="text-sm text-muted-foreground">Resumen consolidado de todos los tableros</p>
         </div>
-        <Button onClick={handleDownloadPDF}>
-          <FileDown className="h-4 w-4 mr-1" /> Descargar Reporte
+        <Button onClick={handleDownloadPDF} disabled={generating} className="gap-2">
+          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+          {generating ? 'Generando...' : 'Descargar Reporte PDF'}
         </Button>
       </div>
 

@@ -9,7 +9,7 @@ import { useProjectStore } from '@/store/useProjectStore';
 
 const navItems = [
   { title: 'Panel', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Tablero', url: '/board', icon: Columns3 },
+  { title: 'Tableros', url: '/boards', icon: Columns3 },
   { title: 'Backlog', url: '/backlog', icon: List },
   { title: 'Iteraciones', url: '/iterations', icon: RotateCcw },
   { title: 'Planificación', url: '/releases', icon: CalendarRange },
