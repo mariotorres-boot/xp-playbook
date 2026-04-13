@@ -111,7 +111,7 @@ export const useProjectStore = create<ProjectState>()(
         boards: s.boards.map((b) => (b.id === id ? { ...b, ...updates } : b)),
       })),
       deleteBoard: (id) => set((s) => ({
-        boards: s.boards.filter((b) => g => g.id !== id),
+        boards: s.boards.filter((b) => b.id !== id),
         currentBoardId: s.currentBoardId === id ? (s.boards.find(b => b.id !== id)?.id || '') : s.currentBoardId,
       })),
       setCurrentBoard: (id) => set({ currentBoardId: id }),

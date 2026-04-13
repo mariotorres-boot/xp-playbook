@@ -12,6 +12,7 @@ import BacklogPage from "./pages/BacklogPage";
 import IterationsPage from "./pages/IterationsPage";
 import ReleasesPage from "./pages/ReleasesPage";
 import TeamPage from "./pages/TeamPage";
+import ReportsPage from "./pages/ReportsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/iterations" element={<AuthGuard><IterationsPage /></AuthGuard>} />
           <Route path="/releases" element={<AuthGuard><ReleasesPage /></AuthGuard>} />
           <Route path="/team" element={<AuthGuard><TeamPage /></AuthGuard>} />
+          <Route path="/reports" element={<AuthGuard><ReportsPage /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

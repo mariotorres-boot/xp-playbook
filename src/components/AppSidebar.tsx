@@ -1,4 +1,4 @@
-import { LayoutDashboard, Columns3, List, RotateCcw, CalendarRange, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Columns3, List, RotateCcw, CalendarRange, Users, LogOut, FileBarChart } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -14,6 +14,7 @@ const navItems = [
   { title: 'Iteraciones', url: '/iterations', icon: RotateCcw },
   { title: 'Planificación', url: '/releases', icon: CalendarRange },
   { title: 'Equipo y Grupos', url: '/team', icon: Users },
+  { title: 'Reportes', url: '/reports', icon: FileBarChart },
 ];
 
 export function AppSidebar() {
