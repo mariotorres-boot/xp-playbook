@@ -12,7 +12,7 @@ export interface TeamMember {
 export interface Group {
   id: string;
   name: string;
-  members: string[]; // team member IDs
+  members: string[];
 }
 
 export interface UserStory {
@@ -29,6 +29,7 @@ export interface UserStory {
   createdAt: string;
   labels?: string[];
   testCriteria?: string;
+  boardId?: string;
 }
 
 export interface Iteration {
@@ -45,4 +46,9 @@ export interface Release {
   name: string;
   targetDate: string;
   iterations: number[];
+}
+
+export interface Board {
+  id: string;
+  name: string;
 }
