@@ -7,14 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Users, Plus, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, UserPlus, DollarSign } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import type { Group, TeamMember } from '@/types/xp';
 
 const roleLabels: Record<string, string> = { developer: 'Desarrollador', tester: 'Probador', coach: 'Coach' };
 
 export default function TeamPage() {
-  const { team, stories, groups, addGroup, updateGroup, deleteGroup, addTeamMember, updateTeamMember, deleteTeamMember } = useProjectStore();
+  const { team, stories, groups, addGroup, updateGroup, deleteGroup, addTeamMember, updateTeamMember, deleteTeamMember, penaltyRate, setPenaltyRate } = useProjectStore();
 
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [editGroup, setEditGroup] = useState<Group | null>(null);
@@ -25,6 +25,7 @@ export default function TeamPage() {
   const [editMember, setEditMember] = useState<TeamMember | null>(null);
   const [memberName, setMemberName] = useState('');
   const [memberRole, setMemberRole] = useState<'developer' | 'tester' | 'coach'>('developer');
+  const [memberSalary, setMemberSalary] = useState(0);
 
   const openNewGroup = () => { setEditGroup(null); setGroupName(''); setSelectedMembers([]); setGroupDialogOpen(true); };
   const openEditGroup = (g: Group) => { setEditGroup(g); setGroupName(g.name); setSelectedMembers(g.members); setGroupDialogOpen(true); };
@@ -36,15 +37,20 @@ export default function TeamPage() {
   };
   const toggleMember = (id: string) => setSelectedMembers((prev) => prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]);
 
-  const openNewMember = () => { setEditMember(null); setMemberName(''); setMemberRole('developer'); setMemberDialogOpen(true); };
-  const openEditMember = (m: TeamMember) => { setEditMember(m); setMemberName(m.name); setMemberRole(m.role); setMemberDialogOpen(true); };
+  const openNewMember = () => { setEditMember(null); setMemberName(''); setMemberRole('developer'); setMemberSalary(0); setMemberDialogOpen(true); };
+  const openEditMember = (m: TeamMember) => { setEditMember(m); setMemberName(m.name); setMemberRole(m.role); setMemberSalary(m.monthlySalary); setMemberDialogOpen(true); };
   const handleSaveMember = () => {
     if (!memberName.trim()) return;
-    if (editMember) updateTeamMember(editMember.id, { name: memberName, role: memberRole });
-    else addTeamMember({ id: `m${Date.now()}`, name: memberName, role: memberRole });
+    const dailyCost = Math.round((memberSalary / 30) * 100) / 100;
+    const hourlyCost = Math.round((memberSalary / 30 / 8) * 100) / 100;
+    if (editMember) updateTeamMember(editMember.id, { name: memberName, role: memberRole, monthlySalary: memberSalary, dailyCost, hourlyCost });
+    else addTeamMember({ id: `m${Date.now()}`, name: memberName, role: memberRole, monthlySalary: memberSalary, dailyCost, hourlyCost });
     setMemberDialogOpen(false);
   };
   const handleDeleteMember = (id: string) => deleteTeamMember(id);
+
+  const computedDailyCost = Math.round((memberSalary / 30) * 100) / 100;
+  const computedHourlyCost = Math.round((memberSalary / 30 / 8) * 100) / 100;
 
   return (
     <div className="p-6 space-y-6">
@@ -60,6 +66,14 @@ export default function TeamPage() {
           const assigned = stories.filter((s) => s.assignee === m.id);
           const active = assigned.filter((s) => s.status !== 'done');
           const memberGroups = groups.filter((g) => g.members.includes(m.id));
+          const totalEstCost = assigned.reduce((sum, s) => sum + (s.estimatedHours || 0) * m.hourlyCost, 0);
+          // Penalty calc
+          const penalties = assigned.filter(s => s.actualHours && s.estimatedHours && s.actualHours > s.estimatedHours);
+          const penaltyAmount = penalties.reduce((sum, s) => {
+            const excess = (s.actualHours! - s.estimatedHours!) * m.hourlyCost;
+            return sum + excess * (penaltyRate / 100);
+          }, 0);
+
           return (
             <Card key={m.id}>
               <CardContent className="p-4">
@@ -81,8 +95,22 @@ export default function TeamPage() {
                   </div>
                 </div>
                 <div className="mt-3 text-sm text-muted-foreground">
-                  {active.length} activas · {assigned.length} actividades totales
+                  {active.length} activas · {assigned.length} totales
                 </div>
+                <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+                  <DollarSign className="h-3 w-3" />
+                  Salario: ${m.monthlySalary.toLocaleString()}/mes · ${m.dailyCost.toFixed(0)}/día · ${m.hourlyCost.toFixed(2)}/hr
+                </div>
+                {totalEstCost > 0 && (
+                  <div className="mt-1 text-xs font-medium text-primary">
+                    Costo estimado asignado: ${totalEstCost.toFixed(2)}
+                  </div>
+                )}
+                {penaltyAmount > 0 && (
+                  <div className="mt-1 text-xs font-medium text-destructive">
+                    Descuento por retraso: -${penaltyAmount.toFixed(2)}
+                  </div>
+                )}
                 {memberGroups.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
                     {memberGroups.map((g) => (
@@ -95,6 +123,22 @@ export default function TeamPage() {
           );
         })}
       </div>
+
+      {/* Penalty rate config */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-primary" /> Configuración de Nómina
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3 max-w-sm">
+            <Label className="whitespace-nowrap">Penalización por retraso (%)</Label>
+            <Input type="number" min={0} max={100} value={penaltyRate} onChange={(e) => setPenaltyRate(Number(e.target.value))} className="w-24" />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Porcentaje de descuento aplicado cuando una actividad excede el tiempo estipulado.</p>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -180,6 +224,20 @@ export default function TeamPage() {
                   <SelectItem value="coach">Coach</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Salario Mensual ($)</Label>
+              <Input type="number" min={0} value={memberSalary} onChange={(e) => setMemberSalary(Number(e.target.value))} placeholder="Ej: 3000" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Costo por Día</Label>
+                <Input value={`$${computedDailyCost.toFixed(2)}`} readOnly className="bg-muted" />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Costo por Hora</Label>
+                <Input value={`$${computedHourlyCost.toFixed(2)}`} readOnly className="bg-muted" />
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setMemberDialogOpen(false)}>Cancelar</Button>

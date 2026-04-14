@@ -8,7 +8,7 @@ import { CalendarDays } from 'lucide-react';
 import type { UserStory } from '@/types/xp';
 
 const statusLabels: Record<string, string> = {
-  backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', done: 'Hecho',
+  backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', 'in-review': 'En Revisión', done: 'Completado',
 };
 const priorityLabels: Record<string, string> = {
   critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja',
@@ -84,6 +84,8 @@ export default function IterationsPage() {
                 <div><strong>Puntos:</strong> {selectedStory.storyPoints} SP</div>
                 <div><strong>Responsable:</strong> {team.find(m => m.id === selectedStory.assignee)?.name || 'Sin asignar'}</div>
                 <div><strong>Grupo:</strong> {groups.find(g => g.id === selectedStory.groupId)?.name || 'Sin grupo'}</div>
+                {selectedStory.estimatedHours && <div><strong>Hrs Estimadas:</strong> {selectedStory.estimatedHours}</div>}
+                {selectedStory.actualHours && <div><strong>Hrs Reales:</strong> {selectedStory.actualHours}</div>}
               </div>
               {selectedStory.testCriteria && (
                 <div>
