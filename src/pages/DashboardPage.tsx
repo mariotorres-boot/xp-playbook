@@ -1,13 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProjectStore } from '@/store/useProjectStore';
+import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Activity, CheckCircle2, Clock, AlertTriangle, Users } from 'lucide-react';
+import { Activity, CheckCircle2, Clock, AlertTriangle, Users, ExternalLink } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { stories, iterations, team, groups, currentIteration, boards, currentBoardId } = useProjectStore();
+  const navigate = useNavigate();
+  const { stories, iterations, team, groups, currentIteration, boards, currentBoardId, setCurrentBoard } = useProjectStore();
 
-  const boardStories = stories.filter((s) => s.boardId === currentBoardId || (!s.boardId && currentBoardId === 'b1'));
+  const filterAll = currentBoardId === '__all__';
+  const boardStories = filterAll
+    ? stories
+    : stories.filter((s) => s.boardId === currentBoardId || (!s.boardId && currentBoardId === 'b1'));
   const iter = iterations.find((i) => i.id === currentIteration);
   const iterStories = boardStories.filter((s) => s.iteration === currentIteration);
   const done = iterStories.filter((s) => s.status === 'done');
@@ -16,6 +23,7 @@ export default function DashboardPage() {
   const totalPoints = iterStories.reduce((sum, s) => sum + s.storyPoints, 0);
   const criticalBugs = boardStories.filter((s) => s.type === 'bug' && s.priority === 'critical' && s.status !== 'done');
   const currentBoard = boards.find(b => b.id === currentBoardId);
+  const selectedValue = filterAll ? '__all__' : currentBoardId;
 
   const velocityData = iterations.map((it) => ({
     name: `Iter ${it.id}`,
@@ -32,9 +40,29 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Panel — {currentBoard?.name || 'Tablero'}</h1>
-        <p className="text-muted-foreground text-sm">{iter?.name || 'Sin iteración activa'}</p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Panel — {filterAll ? 'Todos los Tableros' : (currentBoard?.name || 'Tablero')}</h1>
+          <p className="text-muted-foreground text-sm">{iter?.name || 'Sin iteración activa'}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={selectedValue} onValueChange={(v) => setCurrentBoard(v)}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Seleccionar Tablero" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todos los Tableros</SelectItem>
+              {boards.map((b) => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {!filterAll && (
+            <Button size="sm" variant="outline" onClick={() => navigate('/board')}>
+              <ExternalLink className="h-4 w-4 mr-1" /> Ir al Tablero
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
