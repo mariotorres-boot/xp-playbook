@@ -5,11 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useProjectStore } from '@/store/useProjectStore';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Activity, CheckCircle2, Clock, AlertTriangle, Users, ExternalLink } from 'lucide-react';
+import { Activity, CheckCircle2, Clock, AlertTriangle, Users, ExternalLink, DollarSign } from 'lucide-react';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { stories, iterations, team, groups, currentIteration, boards, currentBoardId, setCurrentBoard } = useProjectStore();
+  const { stories, iterations, team, groups, currentIteration, boards, currentBoardId, setCurrentBoard, penaltyRate } = useProjectStore();
 
   const filterAll = currentBoardId === '__all__';
   const boardStories = filterAll
@@ -24,6 +24,28 @@ export default function DashboardPage() {
   const criticalBugs = boardStories.filter((s) => s.type === 'bug' && s.priority === 'critical' && s.status !== 'done');
   const currentBoard = boards.find(b => b.id === currentBoardId);
   const selectedValue = filterAll ? '__all__' : currentBoardId;
+
+  // Cost calculations
+  const totalEstimatedCost = boardStories.reduce((sum, s) => {
+    const member = team.find(m => m.id === s.assignee);
+    if (!member || !s.estimatedHours) return sum;
+    return sum + s.estimatedHours * member.hourlyCost;
+  }, 0);
+
+  const totalActualCost = boardStories.reduce((sum, s) => {
+    const member = team.find(m => m.id === s.assignee);
+    if (!member || !s.actualHours) return sum;
+    return sum + s.actualHours * member.hourlyCost;
+  }, 0);
+
+  const totalPenalties = boardStories.reduce((sum, s) => {
+    const member = team.find(m => m.id === s.assignee);
+    if (!member || !s.actualHours || !s.estimatedHours || s.actualHours <= s.estimatedHours) return sum;
+    const excess = (s.actualHours - s.estimatedHours) * member.hourlyCost;
+    return sum + excess * (penaltyRate / 100);
+  }, 0);
+
+  const overdueTasks = boardStories.filter(s => s.actualHours && s.estimatedHours && s.actualHours > s.estimatedHours);
 
   const velocityData = iterations.map((it) => ({
     name: `Iter ${it.id}`,
@@ -81,6 +103,43 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* Financial Metrics */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-primary" /> Métricas Financieras
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-3 bg-secondary/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">Presupuesto Estimado</p>
+              <p className="text-xl font-bold">${totalEstimatedCost.toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-secondary/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">Costo Real</p>
+              <p className="text-xl font-bold">${totalActualCost.toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-secondary/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">Costo Diario Equipo</p>
+              <p className="text-xl font-bold">${team.reduce((s, m) => s + m.dailyCost, 0).toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-secondary/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">Costo Mensual Equipo</p>
+              <p className="text-xl font-bold">${team.reduce((s, m) => s + m.monthlySalary, 0).toLocaleString()}</p>
+            </div>
+          </div>
+          {totalPenalties > 0 && (
+            <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <span className="text-sm text-destructive font-medium">
+                Descuentos por incumplimiento: -${totalPenalties.toFixed(2)} ({overdueTasks.length} {overdueTasks.length === 1 ? 'tarea' : 'tareas'} con retraso)
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -113,7 +172,7 @@ export default function DashboardPage() {
                   <Badge variant="outline" className="text-[10px]">{{ 'user-story': 'Historia', 'task': 'Tarea', 'bug': 'Bug', 'tdd-task': 'TDD' }[s.type] || s.type}</Badge>
                   <span className="text-sm">{s.title}</span>
                 </div>
-                <Badge variant="secondary" className="text-xs">{{ backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', done: 'Hecho' }[s.status] || s.status}</Badge>
+                <Badge variant="secondary" className="text-xs">{{ backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', 'in-review': 'En Revisión', done: 'Completado' }[s.status] || s.status}</Badge>
               </div>
             ))}
           </CardContent>
@@ -135,6 +194,7 @@ export default function DashboardPage() {
                   </div>
                   <p className="text-sm font-medium mt-1.5">{m.name}</p>
                   <p className="text-xs text-muted-foreground">{assigned.length} activas</p>
+                  <p className="text-xs text-muted-foreground">${m.hourlyCost.toFixed(2)}/hr</p>
                 </div>
               );
             })}

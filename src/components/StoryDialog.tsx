@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Clock, History } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import type { UserStory, Priority, Status, CardType } from '@/types/xp';
 
@@ -19,13 +20,15 @@ interface StoryDialogProps {
 }
 
 export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultIteration }: StoryDialogProps) {
-  const { team, iterations, groups, addStory, updateStory, deleteStory, currentBoardId } = useProjectStore();
+  const { team, iterations, groups, addStory, updateStory, deleteStory, currentBoardId, activityLogs } = useProjectStore();
   const isEdit = !!story;
+  const [showLogs, setShowLogs] = useState(false);
 
   const [form, setForm] = useState({
     title: '', description: '', assignee: '', groupId: '',
     priority: 'medium' as Priority, storyPoints: 3, status: (defaultStatus || 'backlog') as Status,
     iteration: defaultIteration || 0, type: 'user-story' as CardType, testCriteria: '',
+    estimatedHours: 0, actualHours: 0,
   });
 
   useEffect(() => {
@@ -35,12 +38,15 @@ export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultI
         groupId: story.groupId || '',
         priority: story.priority, storyPoints: story.storyPoints, status: story.status,
         iteration: story.iteration || 0, type: story.type, testCriteria: story.testCriteria || '',
+        estimatedHours: story.estimatedHours || 0, actualHours: story.actualHours || 0,
       });
     } else {
       setForm({ title: '', description: '', assignee: '', groupId: '',
         priority: 'medium', storyPoints: 3, status: defaultStatus || 'backlog',
-        iteration: defaultIteration || 0, type: 'user-story', testCriteria: '' });
+        iteration: defaultIteration || 0, type: 'user-story', testCriteria: '',
+        estimatedHours: 0, actualHours: 0 });
     }
+    setShowLogs(false);
   }, [story, open, defaultStatus, defaultIteration]);
 
   const handleSave = () => {
@@ -54,6 +60,8 @@ export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultI
       createdAt: story?.createdAt || new Date().toISOString().split('T')[0],
       testCriteria: form.testCriteria || undefined,
       boardId: story?.boardId || currentBoardId,
+      estimatedHours: form.estimatedHours || undefined,
+      actualHours: form.actualHours || undefined,
     };
     if (isEdit) updateStory(data.id, data);
     else addStory(data);
@@ -67,9 +75,15 @@ export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultI
     }
   };
 
+  // Delete allowed only in todo, in-progress, in-review
   const canDelete = isEdit && story && story.status !== 'done';
 
-  const developers = team.filter((m) => m.role === 'developer' || m.role === 'tester');
+  const developers = team;
+  const storyLogs = story ? activityLogs.filter(l => l.storyId === story.id) : [];
+
+  // Cost calculation
+  const assigneeMember = team.find(m => m.id === form.assignee);
+  const estimatedCost = assigneeMember && form.estimatedHours ? (form.estimatedHours * assigneeMember.hourlyCost) : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -132,7 +146,8 @@ export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultI
                   <SelectItem value="backlog">Backlog</SelectItem>
                   <SelectItem value="todo">Por Hacer</SelectItem>
                   <SelectItem value="in-progress">En Progreso</SelectItem>
-                  <SelectItem value="done">Hecho</SelectItem>
+                  <SelectItem value="in-review">En Revisión</SelectItem>
+                  <SelectItem value="done">Completado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -175,12 +190,51 @@ export function StoryDialog({ open, onOpenChange, story, defaultStatus, defaultI
               </SelectContent>
             </Select>
           </div>
+          {/* Time & Cost */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Horas Estimadas</Label>
+              <Input type="number" min={0} value={form.estimatedHours} onChange={(e) => setForm({ ...form, estimatedHours: Number(e.target.value) })} />
+            </div>
+            <div>
+              <Label className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Horas Reales</Label>
+              <Input type="number" min={0} value={form.actualHours} onChange={(e) => setForm({ ...form, actualHours: Number(e.target.value) })} />
+            </div>
+          </div>
+          {estimatedCost > 0 && (
+            <div className="p-2 bg-secondary/50 rounded-lg text-sm">
+              <strong>Costo estimado:</strong> ${estimatedCost.toFixed(2)} ({form.estimatedHours}h × ${assigneeMember?.hourlyCost.toFixed(2)}/h)
+              {form.actualHours > form.estimatedHours && (
+                <Badge variant="destructive" className="ml-2 text-xs">⚠ Excede tiempo</Badge>
+              )}
+            </div>
+          )}
           {(form.type === 'tdd-task' || form.type === 'user-story') && (
             <div>
               <Label>Criterios de Prueba / Aceptación</Label>
               <Textarea value={form.testCriteria} onChange={(e) => setForm({ ...form, testCriteria: e.target.value })} rows={2} placeholder="Definir criterios de prueba..." />
             </div>
           )}
+
+          {/* Activity log */}
+          {isEdit && storyLogs.length > 0 && (
+            <div>
+              <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setShowLogs(!showLogs)}>
+                <History className="h-3.5 w-3.5" /> Historial ({storyLogs.length})
+              </Button>
+              {showLogs && (
+                <div className="mt-2 max-h-32 overflow-y-auto space-y-1 border rounded-lg p-2">
+                  {storyLogs.slice().reverse().map((log) => (
+                    <div key={log.id} className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">{log.action}</span>
+                      {' · '}{log.user || 'Sistema'} · {new Date(log.timestamp).toLocaleString('es-ES')}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-between pt-2">
             <div>
               {canDelete && (

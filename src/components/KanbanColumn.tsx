@@ -6,7 +6,8 @@ const columnMeta: Record<Status, { label: string; color: string }> = {
   backlog: { label: 'Backlog', color: 'bg-muted-foreground' },
   todo: { label: 'Por Hacer', color: 'bg-info' },
   'in-progress': { label: 'En Progreso', color: 'bg-accent' },
-  done: { label: 'Hecho', color: 'bg-success' },
+  'in-review': { label: 'En Revisión', color: 'bg-warning' },
+  done: { label: 'Completado', color: 'bg-success' },
 };
 
 interface KanbanColumnProps {
@@ -20,7 +21,7 @@ export function KanbanColumn({ status, stories, onCardClick }: KanbanColumnProps
   const totalPoints = stories.reduce((sum, s) => sum + s.storyPoints, 0);
 
   return (
-    <div className="flex flex-col min-w-[280px] w-[280px] bg-muted/50 rounded-lg">
+    <div className="flex flex-col min-w-[260px] w-[260px] bg-muted/50 rounded-lg">
       <div className="flex items-center justify-between px-3 py-2.5 border-b">
         <div className="flex items-center gap-2">
           <div className={`w-2.5 h-2.5 rounded-full ${meta.color}`} />

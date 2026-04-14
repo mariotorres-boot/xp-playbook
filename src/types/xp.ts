@@ -1,5 +1,5 @@
 export type Priority = 'critical' | 'high' | 'medium' | 'low';
-export type Status = 'backlog' | 'todo' | 'in-progress' | 'done';
+export type Status = 'backlog' | 'todo' | 'in-progress' | 'in-review' | 'done';
 export type CardType = 'user-story' | 'task' | 'bug' | 'tdd-task';
 
 export interface TeamMember {
@@ -7,12 +7,24 @@ export interface TeamMember {
   name: string;
   avatar?: string;
   role: 'developer' | 'tester' | 'coach';
+  monthlySalary: number;
+  dailyCost: number;
+  hourlyCost: number;
 }
 
 export interface Group {
   id: string;
   name: string;
   members: string[];
+}
+
+export interface ActivityLog {
+  id: string;
+  storyId: string;
+  action: string;
+  user: string;
+  timestamp: string;
+  details?: string;
 }
 
 export interface UserStory {
@@ -30,6 +42,9 @@ export interface UserStory {
   labels?: string[];
   testCriteria?: string;
   boardId?: string;
+  estimatedHours?: number;
+  actualHours?: number;
+  penaltyRate?: number;
 }
 
 export interface Iteration {

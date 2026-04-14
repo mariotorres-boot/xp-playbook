@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useProjectStore } from '@/store/useProjectStore';
-import { FileDown, BarChart3, Users, CheckCircle2, Clock, AlertTriangle, Loader2 } from 'lucide-react';
+import { FileDown, BarChart3, Users, CheckCircle2, Clock, AlertTriangle, Loader2, DollarSign } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const statusLabels: Record<string, string> = {
-  backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', done: 'Hecho',
+  backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', 'in-review': 'En Revisión', done: 'Completado',
 };
 const priorityLabels: Record<string, string> = {
   critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja',
@@ -18,7 +18,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function ReportsPage() {
-  const { stories, iterations, team, groups, boards, currentBoardId } = useProjectStore();
+  const { stories, iterations, team, groups, boards, currentBoardId, penaltyRate } = useProjectStore();
   const [generating, setGenerating] = useState(false);
 
   const totalStories = stories.length;
@@ -28,11 +28,28 @@ export default function ReportsPage() {
   const totalPoints = stories.reduce((sum, s) => sum + s.storyPoints, 0);
   const donePoints = doneStories.reduce((sum, s) => sum + s.storyPoints, 0);
 
+  // Cost metrics
+  const totalEstimatedCost = stories.reduce((sum, s) => {
+    const m = team.find(t => t.id === s.assignee);
+    return sum + (m && s.estimatedHours ? s.estimatedHours * m.hourlyCost : 0);
+  }, 0);
+  const totalActualCost = stories.reduce((sum, s) => {
+    const m = team.find(t => t.id === s.assignee);
+    return sum + (m && s.actualHours ? s.actualHours * m.hourlyCost : 0);
+  }, 0);
+
   const teamWorkload = team.map((m) => {
     const assigned = stories.filter((s) => s.assignee === m.id);
     const active = assigned.filter((s) => s.status !== 'done');
     const points = assigned.reduce((sum, s) => sum + s.storyPoints, 0);
-    return { ...m, total: assigned.length, active: active.length, points };
+    const estCost = assigned.reduce((sum, s) => sum + (s.estimatedHours || 0) * m.hourlyCost, 0);
+    const penalties = assigned.reduce((sum, s) => {
+      if (s.actualHours && s.estimatedHours && s.actualHours > s.estimatedHours) {
+        return sum + (s.actualHours - s.estimatedHours) * m.hourlyCost * (penaltyRate / 100);
+      }
+      return sum;
+    }, 0);
+    return { ...m, total: assigned.length, active: active.length, points, estCost, penalties };
   });
 
   const boardSummaries = boards.map((b) => {
@@ -40,14 +57,17 @@ export default function ReportsPage() {
     const bDone = bStories.filter((s) => s.status === 'done');
     const bTotal = bStories.reduce((sum, s) => sum + s.storyPoints, 0);
     const bDoneP = bDone.reduce((sum, s) => sum + s.storyPoints, 0);
-    return { ...b, total: bStories.length, done: bDone.length, totalPoints: bTotal, donePoints: bDoneP };
+    const bCost = bStories.reduce((sum, s) => {
+      const m = team.find(t => t.id === s.assignee);
+      return sum + (m && s.estimatedHours ? s.estimatedHours * m.hourlyCost : 0);
+    }, 0);
+    return { ...b, total: bStories.length, done: bDone.length, totalPoints: bTotal, donePoints: bDoneP, cost: bCost };
   });
 
   const currentBoard = boards.find((b) => b.id === currentBoardId);
 
   const handleDownloadPDF = async () => {
     setGenerating(true);
-    // Use setTimeout to let the UI update before heavy work
     await new Promise((r) => setTimeout(r, 50));
 
     try {
@@ -56,7 +76,6 @@ export default function ReportsPage() {
       const margin = 15;
       let y = 20;
 
-      // Header
       doc.setFontSize(20);
       doc.setFont('helvetica', 'bold');
       doc.text('XP Board', margin, y);
@@ -67,8 +86,6 @@ export default function ReportsPage() {
       doc.text(`Reporte generado el ${dateStr}`, margin, y + 7);
       doc.text(`Tablero: ${currentBoard?.name || 'Todos'}`, margin, y + 13);
       doc.setTextColor(0);
-
-      // Divider
       y += 20;
       doc.setDrawColor(200);
       doc.line(margin, y, pageW - margin, y);
@@ -79,71 +96,89 @@ export default function ReportsPage() {
       doc.setFont('helvetica', 'bold');
       doc.text('Métricas Clave', margin, y);
       y += 8;
-
       const pctGeneral = totalPoints > 0 ? Math.round((donePoints / totalPoints) * 100) : 0;
-      const kpis = [
-        ['Total de Actividades', String(totalStories)],
-        ['Completadas', `${doneStories.length} (${pctGeneral}%)`],
-        ['En Progreso', String(inProgressStories.length)],
-        ['Bugs Críticos Abiertos', String(criticalBugs.length)],
-        ['Puntos Totales', String(totalPoints)],
-        ['Puntos Completados', String(donePoints)],
-      ];
-
       autoTable(doc, {
         startY: y,
         head: [['Métrica', 'Valor']],
-        body: kpis,
-        margin: { left: margin, right: margin },
-        theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
-        styles: { fontSize: 10 },
+        body: [
+          ['Total de Actividades', String(totalStories)],
+          ['Completadas', `${doneStories.length} (${pctGeneral}%)`],
+          ['En Progreso', String(inProgressStories.length)],
+          ['Bugs Críticos Abiertos', String(criticalBugs.length)],
+          ['Puntos Totales', String(totalPoints)],
+          ['Puntos Completados', String(donePoints)],
+        ],
+        margin: { left: margin, right: margin }, theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' }, styles: { fontSize: 10 },
       });
-
       y = (doc as any).lastAutoTable.finalY + 10;
 
+      // Cost Analysis
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Análisis de Costos', margin, y);
+      y += 6;
+      autoTable(doc, {
+        startY: y,
+        head: [['Concepto', 'Monto']],
+        body: [
+          ['Presupuesto Estimado Total', `$${totalEstimatedCost.toFixed(2)}`],
+          ['Costo Real Actual', `$${totalActualCost.toFixed(2)}`],
+          ['Costo Mensual Equipo', `$${team.reduce((s, m) => s + m.monthlySalary, 0).toLocaleString()}`],
+          ['Costo Diario Equipo', `$${team.reduce((s, m) => s + m.dailyCost, 0).toFixed(2)}`],
+          ['Costo Horario Equipo', `$${team.reduce((s, m) => s + m.hourlyCost, 0).toFixed(2)}`],
+        ],
+        margin: { left: margin, right: margin }, theme: 'grid',
+        headStyles: { fillColor: [34, 197, 94], textColor: 255, fontStyle: 'bold' }, styles: { fontSize: 10 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 4;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(100);
+      const costPct = totalEstimatedCost > 0 ? Math.round((totalActualCost / totalEstimatedCost) * 100) : 0;
+      doc.text(`Análisis: Se ha consumido el ${costPct}% del presupuesto estimado. Avance del proyecto: ${pctGeneral}%.`, margin, y + 4);
+      doc.setTextColor(0);
+      y += 12;
+
       // Board summary
+      if (y > 220) { doc.addPage(); y = 20; }
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.text('Estado por Tablero', margin, y);
       y += 6;
-
       autoTable(doc, {
         startY: y,
-        head: [['Tablero', 'Actividades', 'Completadas', 'Puntos', 'Avance']],
+        head: [['Tablero', 'Actividades', 'Completadas', 'Puntos', 'Avance', 'Costo Est.']],
         body: boardSummaries.map((b) => {
           const pct = b.totalPoints > 0 ? Math.round((b.donePoints / b.totalPoints) * 100) : 0;
-          return [b.name, String(b.total), String(b.done), `${b.donePoints}/${b.totalPoints}`, `${pct}%`];
+          return [b.name, String(b.total), String(b.done), `${b.donePoints}/${b.totalPoints}`, `${pct}%`, `$${b.cost.toFixed(2)}`];
         }),
-        margin: { left: margin, right: margin },
-        theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
-        styles: { fontSize: 9 },
+        margin: { left: margin, right: margin }, theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' }, styles: { fontSize: 9 },
       });
-
       y = (doc as any).lastAutoTable.finalY + 10;
 
-      // Team workload
-      if (y > 240) { doc.addPage(); y = 20; }
+      // Team workload with costs
+      if (y > 220) { doc.addPage(); y = 20; }
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('Carga de Trabajo del Equipo', margin, y);
+      doc.text('Carga de Trabajo y Costos del Equipo', margin, y);
       y += 6;
-
       autoTable(doc, {
         startY: y,
-        head: [['Miembro', 'Rol', 'Activas', 'Totales', 'Puntos']],
+        head: [['Miembro', 'Rol', 'Salario', 'Costo Est.', 'Descuentos', 'Activas', 'Puntos']],
         body: teamWorkload.map((m) => [
           m.name,
           m.role === 'developer' ? 'Desarrollador' : m.role === 'tester' ? 'Tester' : 'Coach',
-          String(m.active), String(m.total), String(m.points),
+          `$${m.monthlySalary.toLocaleString()}`,
+          `$${m.estCost.toFixed(2)}`,
+          m.penalties > 0 ? `-$${m.penalties.toFixed(2)}` : '$0.00',
+          String(m.active),
+          String(m.points),
         ]),
-        margin: { left: margin, right: margin },
-        theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
-        styles: { fontSize: 9 },
+        margin: { left: margin, right: margin }, theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' }, styles: { fontSize: 8 },
       });
-
       y = (doc as any).lastAutoTable.finalY + 10;
 
       // Activity table
@@ -152,29 +187,26 @@ export default function ReportsPage() {
       doc.setFont('helvetica', 'bold');
       doc.text('Detalle de Actividades', margin, y);
       y += 6;
-
       autoTable(doc, {
         startY: y,
-        head: [['Título', 'Tipo', 'Prioridad', 'Estado', 'SP', 'Asignado']],
+        head: [['Título', 'Tipo', 'Prioridad', 'Estado', 'SP', 'Hrs Est.', 'Hrs Real', 'Costo', 'Asignado']],
         body: stories.map((s) => {
           const assignee = team.find((t) => t.id === s.assignee);
+          const cost = assignee && s.estimatedHours ? (s.estimatedHours * assignee.hourlyCost) : 0;
           return [
-            s.title,
-            typeLabels[s.type] || s.type,
-            priorityLabels[s.priority] || s.priority,
-            statusLabels[s.status] || s.status,
-            String(s.storyPoints),
+            s.title, typeLabels[s.type] || s.type, priorityLabels[s.priority] || s.priority,
+            statusLabels[s.status] || s.status, String(s.storyPoints),
+            s.estimatedHours ? String(s.estimatedHours) : '—',
+            s.actualHours ? String(s.actualHours) : '—',
+            cost > 0 ? `$${cost.toFixed(2)}` : '—',
             assignee?.name || '—',
           ];
         }),
-        margin: { left: margin, right: margin },
-        theme: 'grid',
+        margin: { left: margin, right: margin }, theme: 'grid',
         headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
-        styles: { fontSize: 8, cellPadding: 2 },
-        columnStyles: { 0: { cellWidth: 55 } },
+        styles: { fontSize: 7, cellPadding: 2 }, columnStyles: { 0: { cellWidth: 40 } },
       });
 
-      // Dynamic filename
       const boardName = (currentBoard?.name || 'General').replace(/\s+/g, '_');
       const dateFile = new Date().toISOString().split('T')[0];
       doc.save(`Reporte_Tablero_${boardName}_${dateFile}.pdf`);
@@ -200,37 +232,25 @@ export default function ReportsPage() {
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary text-primary"><CheckCircle2 className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{donePoints}/{totalPoints} SP</p>
-              <p className="text-xs text-muted-foreground">Completados</p>
-            </div>
+            <div><p className="text-2xl font-bold">{donePoints}/{totalPoints} SP</p><p className="text-xs text-muted-foreground">Completados</p></div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary text-accent-foreground"><Clock className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{inProgressStories.length}</p>
-              <p className="text-xs text-muted-foreground">En Progreso</p>
-            </div>
+            <div><p className="text-2xl font-bold">{inProgressStories.length}</p><p className="text-xs text-muted-foreground">En Progreso</p></div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary text-destructive"><AlertTriangle className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{criticalBugs.length}</p>
-              <p className="text-xs text-muted-foreground">Bugs Críticos</p>
-            </div>
+            <div><p className="text-2xl font-bold">{criticalBugs.length}</p><p className="text-xs text-muted-foreground">Bugs Críticos</p></div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-secondary text-primary"><Users className="h-5 w-5" /></div>
-            <div>
-              <p className="text-2xl font-bold">{team.length}</p>
-              <p className="text-xs text-muted-foreground">Miembros del Equipo</p>
-            </div>
+            <div className="p-2 rounded-lg bg-secondary text-primary"><DollarSign className="h-5 w-5" /></div>
+            <div><p className="text-2xl font-bold">${totalEstimatedCost.toFixed(0)}</p><p className="text-xs text-muted-foreground">Presupuesto Est.</p></div>
           </CardContent>
         </Card>
       </div>
@@ -249,7 +269,10 @@ export default function ReportsPage() {
                 <div key={b.id} className="p-3 bg-secondary/50 rounded-lg">
                   <div className="flex items-center justify-between mb-1">
                     <p className="font-medium text-sm">{b.name}</p>
-                    <Badge variant="outline" className="text-xs">{pct}%</Badge>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">${b.cost.toFixed(0)}</span>
+                      <Badge variant="outline" className="text-xs">{pct}%</Badge>
+                    </div>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
@@ -264,7 +287,7 @@ export default function ReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" /> Carga de Trabajo
+              <Users className="h-4 w-4 text-primary" /> Carga de Trabajo y Costos
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -276,12 +299,13 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium">{m.name}</p>
-                    <p className="text-xs text-muted-foreground">{m.points} SP asignados</p>
+                    <p className="text-xs text-muted-foreground">${m.estCost.toFixed(0)} est. · {m.points} SP</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold">{m.active}</p>
                   <p className="text-xs text-muted-foreground">activas</p>
+                  {m.penalties > 0 && <p className="text-xs text-destructive">-${m.penalties.toFixed(0)}</p>}
                 </div>
               </div>
             ))}

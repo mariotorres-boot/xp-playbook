@@ -11,7 +11,7 @@ import { Plus, LayoutGrid, Pencil, Trash2 } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import type { UserStory, Status } from '@/types/xp';
 
-const COLUMNS: Status[] = ['todo', 'in-progress', 'done'];
+const COLUMNS: Status[] = ['todo', 'in-progress', 'in-review', 'done'];
 
 export default function BoardPage() {
   const { stories, moveStory, reorderStories, currentIteration, boards, currentBoardId, setCurrentBoard, addBoard, updateBoard, deleteBoard } = useProjectStore();
@@ -54,8 +54,6 @@ export default function BoardPage() {
     deleteBoard(currentBoardId);
     setBoardDialogOpen(false);
   };
-
-  const currentBoard = boards.find(b => b.id === currentBoardId);
 
   return (
     <div className="p-6 h-full flex flex-col">
