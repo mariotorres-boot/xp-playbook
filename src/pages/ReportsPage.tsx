@@ -211,7 +211,60 @@ export default function ReportsPage() {
         margin: { left: margin, right: margin }, theme: 'grid',
         headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' }, styles: { fontSize: 8 },
       });
-      y = (doc as any).lastAutoTable.finalY + 10;
+      y = (doc as any).lastAutoTable.finalY + 4;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(100);
+      const topLoad = [...teamWorkload].sort((a, b) => b.active - a.active)[0];
+      const workloadMsg = topLoad
+        ? `Análisis: ${topLoad.name} concentra la mayor carga con ${topLoad.active} tareas activas. Distribuir el trabajo equilibradamente mejora la velocidad del equipo.`
+        : 'Análisis: No hay tareas activas asignadas en este momento.';
+      const wlLines = doc.splitTextToSize(workloadMsg, pageW - margin * 2);
+      doc.text(wlLines, margin, y + 4);
+      doc.setTextColor(0);
+      y += 4 + wlLines.length * 4 + 6;
+
+      // Penalties detail
+      if (y > 200) { doc.addPage(); y = 20; }
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Detalle de Penalizaciones y Descuentos', margin, y);
+      y += 6;
+      if (penaltyDetails.length === 0) {
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100);
+        doc.text('No se han registrado descuentos por incumplimiento en este periodo.', margin, y + 4);
+        doc.setTextColor(0);
+        y += 12;
+      } else {
+        autoTable(doc, {
+          startY: y,
+          head: [['Actividad', 'Empleado', 'Hrs Est.', 'Hrs Real', 'Retraso', 'Monto']],
+          body: penaltyDetails.map((p) => [
+            p.story.title,
+            p.member.name,
+            String(p.story.estimatedHours),
+            String(p.story.actualHours),
+            `${p.delay} h`,
+            `-$${p.amount.toFixed(2)}`,
+          ]),
+          foot: [['', '', '', '', 'Total', `-$${totalPenalties.toFixed(2)}`]],
+          margin: { left: margin, right: margin }, theme: 'grid',
+          headStyles: { fillColor: [239, 68, 68], textColor: 255, fontStyle: 'bold' },
+          footStyles: { fillColor: [254, 226, 226], textColor: [127, 29, 29], fontStyle: 'bold' },
+          styles: { fontSize: 8 },
+        });
+        y = (doc as any).lastAutoTable.finalY + 4;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100);
+        const penaltyMsg = `Análisis: Se aplicaron descuentos por un total de $${totalPenalties.toFixed(2)} sobre ${penaltyDetails.length} ${penaltyDetails.length === 1 ? 'actividad' : 'actividades'} con tiempo real superior al estipulado (tasa de penalización: ${penaltyRate}%).`;
+        const pLines = doc.splitTextToSize(penaltyMsg, pageW - margin * 2);
+        doc.text(pLines, margin, y + 4);
+        doc.setTextColor(0);
+        y += 4 + pLines.length * 4 + 6;
+      }
 
       // Activity table
       if (y > 200) { doc.addPage(); y = 20; }
