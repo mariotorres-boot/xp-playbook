@@ -38,6 +38,19 @@ export default function ReportsPage() {
     return sum + (m && s.actualHours ? s.actualHours * m.hourlyCost : 0);
   }, 0);
 
+  // Penalty details
+  const penaltyDetails = stories
+    .map((s) => {
+      const m = team.find(t => t.id === s.assignee);
+      if (!m || !s.actualHours || !s.estimatedHours || s.actualHours <= s.estimatedHours) return null;
+      const delay = s.actualHours - s.estimatedHours;
+      const amount = delay * m.hourlyCost * (penaltyRate / 100);
+      return { story: s, member: m, delay, amount };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+  const totalPenalties = penaltyDetails.reduce((sum, p) => sum + p.amount, 0);
+  const realExecutedBudget = totalEstimatedCost - totalPenalties;
+
   const teamWorkload = team.map((m) => {
     const assigned = stories.filter((s) => s.assignee === m.id);
     const active = assigned.filter((s) => s.status !== 'done');
@@ -111,7 +124,19 @@ export default function ReportsPage() {
         margin: { left: margin, right: margin }, theme: 'grid',
         headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' }, styles: { fontSize: 10 },
       });
-      y = (doc as any).lastAutoTable.finalY + 10;
+      y = (doc as any).lastAutoTable.finalY + 4;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(100);
+      const progressMsg = pctGeneral >= 80
+        ? `Análisis: Excelente cumplimiento del ${pctGeneral}%, indicando alta eficiencia en esta iteración.`
+        : pctGeneral >= 50
+        ? `Análisis: Avance moderado del ${pctGeneral}%. Se recomienda revisar bloqueos en tareas en progreso.`
+        : `Análisis: Avance bajo del ${pctGeneral}%. Es necesario reorganizar prioridades y atender bugs críticos.`;
+      const progressLines = doc.splitTextToSize(progressMsg, pageW - margin * 2);
+      doc.text(progressLines, margin, y + 4);
+      doc.setTextColor(0);
+      y += 4 + progressLines.length * 4 + 6;
 
       // Cost Analysis
       doc.setFontSize(14);
@@ -124,6 +149,8 @@ export default function ReportsPage() {
         body: [
           ['Presupuesto Estimado Total', `$${totalEstimatedCost.toFixed(2)}`],
           ['Costo Real Actual', `$${totalActualCost.toFixed(2)}`],
+          ['Total Descuentos Aplicados', `-$${totalPenalties.toFixed(2)}`],
+          ['Presupuesto Real Ejecutado', `$${realExecutedBudget.toFixed(2)}`],
           ['Costo Mensual Equipo', `$${team.reduce((s, m) => s + m.monthlySalary, 0).toLocaleString()}`],
           ['Costo Diario Equipo', `$${team.reduce((s, m) => s + m.dailyCost, 0).toFixed(2)}`],
           ['Costo Horario Equipo', `$${team.reduce((s, m) => s + m.hourlyCost, 0).toFixed(2)}`],
@@ -136,9 +163,14 @@ export default function ReportsPage() {
       doc.setFont('helvetica', 'italic');
       doc.setTextColor(100);
       const costPct = totalEstimatedCost > 0 ? Math.round((totalActualCost / totalEstimatedCost) * 100) : 0;
-      doc.text(`Análisis: Se ha consumido el ${costPct}% del presupuesto estimado. Avance del proyecto: ${pctGeneral}%.`, margin, y + 4);
+      const costMsg = `Análisis: Se ha consumido el ${costPct}% del presupuesto estimado con un avance del ${pctGeneral}%. ` +
+        (totalPenalties > 0
+          ? `Las penalizaciones por retraso reducen el presupuesto en $${totalPenalties.toFixed(2)} (${penaltyDetails.length} ${penaltyDetails.length === 1 ? 'tarea afectada' : 'tareas afectadas'}).`
+          : 'No se han aplicado descuentos por retraso en este periodo.');
+      const costLines = doc.splitTextToSize(costMsg, pageW - margin * 2);
+      doc.text(costLines, margin, y + 4);
       doc.setTextColor(0);
-      y += 12;
+      y += 4 + costLines.length * 4 + 6;
 
       // Board summary
       if (y > 220) { doc.addPage(); y = 20; }
@@ -179,7 +211,60 @@ export default function ReportsPage() {
         margin: { left: margin, right: margin }, theme: 'grid',
         headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' }, styles: { fontSize: 8 },
       });
-      y = (doc as any).lastAutoTable.finalY + 10;
+      y = (doc as any).lastAutoTable.finalY + 4;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(100);
+      const topLoad = [...teamWorkload].sort((a, b) => b.active - a.active)[0];
+      const workloadMsg = topLoad
+        ? `Análisis: ${topLoad.name} concentra la mayor carga con ${topLoad.active} tareas activas. Distribuir el trabajo equilibradamente mejora la velocidad del equipo.`
+        : 'Análisis: No hay tareas activas asignadas en este momento.';
+      const wlLines = doc.splitTextToSize(workloadMsg, pageW - margin * 2);
+      doc.text(wlLines, margin, y + 4);
+      doc.setTextColor(0);
+      y += 4 + wlLines.length * 4 + 6;
+
+      // Penalties detail
+      if (y > 200) { doc.addPage(); y = 20; }
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Detalle de Penalizaciones y Descuentos', margin, y);
+      y += 6;
+      if (penaltyDetails.length === 0) {
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100);
+        doc.text('No se han registrado descuentos por incumplimiento en este periodo.', margin, y + 4);
+        doc.setTextColor(0);
+        y += 12;
+      } else {
+        autoTable(doc, {
+          startY: y,
+          head: [['Actividad', 'Empleado', 'Hrs Est.', 'Hrs Real', 'Retraso', 'Monto']],
+          body: penaltyDetails.map((p) => [
+            p.story.title,
+            p.member.name,
+            String(p.story.estimatedHours),
+            String(p.story.actualHours),
+            `${p.delay} h`,
+            `-$${p.amount.toFixed(2)}`,
+          ]),
+          foot: [['', '', '', '', 'Total', `-$${totalPenalties.toFixed(2)}`]],
+          margin: { left: margin, right: margin }, theme: 'grid',
+          headStyles: { fillColor: [239, 68, 68], textColor: 255, fontStyle: 'bold' },
+          footStyles: { fillColor: [254, 226, 226], textColor: [127, 29, 29], fontStyle: 'bold' },
+          styles: { fontSize: 8 },
+        });
+        y = (doc as any).lastAutoTable.finalY + 4;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100);
+        const penaltyMsg = `Análisis: Se aplicaron descuentos por un total de $${totalPenalties.toFixed(2)} sobre ${penaltyDetails.length} ${penaltyDetails.length === 1 ? 'actividad' : 'actividades'} con tiempo real superior al estipulado (tasa de penalización: ${penaltyRate}%).`;
+        const pLines = doc.splitTextToSize(penaltyMsg, pageW - margin * 2);
+        doc.text(pLines, margin, y + 4);
+        doc.setTextColor(0);
+        y += 4 + pLines.length * 4 + 6;
+      }
 
       // Activity table
       if (y > 200) { doc.addPage(); y = 20; }
@@ -228,7 +313,7 @@ export default function ReportsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary text-primary"><CheckCircle2 className="h-5 w-5" /></div>
@@ -251,6 +336,15 @@ export default function ReportsPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary text-primary"><DollarSign className="h-5 w-5" /></div>
             <div><p className="text-2xl font-bold">${totalEstimatedCost.toFixed(0)}</p><p className="text-xs text-muted-foreground">Presupuesto Est.</p></div>
+          </CardContent>
+        </Card>
+        <Card className="border-destructive/30">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-destructive/10 text-destructive"><AlertTriangle className="h-5 w-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-destructive">-${totalPenalties.toFixed(0)}</p>
+              <p className="text-xs text-muted-foreground">Descuentos · Real: ${realExecutedBudget.toFixed(0)}</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -281,6 +375,18 @@ export default function ReportsPage() {
                 </div>
               );
             })}
+            <div className="mt-2 p-2 bg-muted/40 border-l-2 border-primary rounded text-xs text-muted-foreground italic">
+              {(() => {
+                const best = [...boardSummaries].sort((a, b) => {
+                  const pa = a.totalPoints > 0 ? a.donePoints / a.totalPoints : 0;
+                  const pb = b.totalPoints > 0 ? b.donePoints / b.totalPoints : 0;
+                  return pb - pa;
+                })[0];
+                if (!best || best.totalPoints === 0) return 'Análisis: Aún no hay puntos asignados a los tableros para evaluar el progreso.';
+                const pct = Math.round((best.donePoints / best.totalPoints) * 100);
+                return `Análisis: "${best.name}" lidera el avance con ${pct}% completado. Total estimado de inversión: $${boardSummaries.reduce((s, b) => s + b.cost, 0).toFixed(2)}.`;
+              })()}
+            </div>
           </CardContent>
         </Card>
 
@@ -309,9 +415,64 @@ export default function ReportsPage() {
                 </div>
               </div>
             ))}
+            <div className="mt-2 p-2 bg-muted/40 border-l-2 border-primary rounded text-xs text-muted-foreground italic">
+              {(() => {
+                const top = [...teamWorkload].sort((a, b) => b.active - a.active)[0];
+                if (!top || top.active === 0) return 'Análisis: No hay tareas activas en el equipo en este momento.';
+                return `Análisis: ${top.name} concentra la mayor carga (${top.active} activas). Distribuir el trabajo equilibradamente acelera la entrega.`;
+              })()}
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      <Card className={totalPenalties > 0 ? 'border-destructive/30' : undefined}>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <AlertTriangle className={`h-4 w-4 ${totalPenalties > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
+            Detalle de Penalizaciones y Descuentos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {penaltyDetails.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">No se han registrado descuentos por incumplimiento en este periodo.</p>
+          ) : (
+            <div className="space-y-2">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left border-b text-xs text-muted-foreground">
+                      <th className="py-2 pr-2">Actividad</th>
+                      <th className="py-2 pr-2">Empleado</th>
+                      <th className="py-2 pr-2 text-right">Retraso</th>
+                      <th className="py-2 pr-2 text-right">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {penaltyDetails.map((p) => (
+                      <tr key={p.story.id} className="border-b last:border-0">
+                        <td className="py-2 pr-2">{p.story.title}</td>
+                        <td className="py-2 pr-2 text-muted-foreground">{p.member.name}</td>
+                        <td className="py-2 pr-2 text-right">{p.delay} h</td>
+                        <td className="py-2 pr-2 text-right text-destructive font-medium">-${p.amount.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-destructive/10">
+                      <td colSpan={3} className="py-2 px-2 text-right font-bold">Total Acumulado</td>
+                      <td className="py-2 pr-2 text-right font-bold text-destructive">-${totalPenalties.toFixed(2)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <p className="text-xs text-muted-foreground italic mt-2">
+                Análisis: {penaltyDetails.length} {penaltyDetails.length === 1 ? 'actividad excedió' : 'actividades excedieron'} el tiempo estipulado, generando descuentos a una tasa del {penaltyRate}%.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
