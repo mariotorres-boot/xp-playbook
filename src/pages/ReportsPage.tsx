@@ -123,8 +123,25 @@ export default function ReportsPage() {
 
   const currentBoard = boards.find((b) => b.id === currentBoardId);
 
+  // Datasets para los gráficos del PDF
+  const progressChartData = boardSummaries.map((b) => ({
+    name: b.name.length > 14 ? b.name.slice(0, 12) + '…' : b.name,
+    Completados: b.donePoints,
+    Pendientes: Math.max(b.totalPoints - b.donePoints, 0),
+  }));
+  const workloadChartData = teamWorkload.map((m) => ({
+    name: m.name.split(' ')[0],
+    Activas: m.active,
+    Total: m.total,
+  }));
+  const costChartData = teamWorkload
+    .filter((m) => m.estCost > 0 || m.penalties > 0)
+    .map((m) => ({ name: m.name.split(' ')[0], value: Math.round(m.estCost) }));
+
   const handleDownloadPDF = async () => {
     setGenerating(true);
+    // Permite que React renderice el contenedor de captura visible.
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
     await new Promise((r) => setTimeout(r, 50));
 
     try {
