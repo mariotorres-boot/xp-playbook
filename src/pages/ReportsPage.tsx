@@ -334,6 +334,16 @@ export default function ReportsPage() {
       doc.setTextColor(0);
       y += 4 + wlLines.length * 4 + 6;
 
+      // Gráfico de carga de trabajo del equipo
+      addChart(
+        workloadImg,
+        'Gráfico: Carga de Trabajo por Miembro',
+        `Análisis: Muestra tareas activas vs. totales por miembro. ` +
+          (topLoad
+            ? `${topLoad.name} lidera con ${topLoad.active} tareas activas de ${topLoad.total} totales.`
+            : 'Sin asignaciones registradas.'),
+      );
+
       // Penalties detail
       if (y > 200) { doc.addPage(); y = 20; }
       doc.setFontSize(14);
