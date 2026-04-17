@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,47 @@ import { useProjectStore } from '@/store/useProjectStore';
 import { FileDown, BarChart3, Users, CheckCircle2, Clock, AlertTriangle, Loader2, DollarSign } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell,
+} from 'recharts';
+
+const CHART_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+
+// Wait until web fonts and all <img> resources are loaded before capture.
+async function waitForResources(root: HTMLElement) {
+  try {
+    if ((document as any).fonts?.ready) {
+      await (document as any).fonts.ready;
+    }
+  } catch { /* noop */ }
+  const imgs = Array.from(root.querySelectorAll('img'));
+  await Promise.all(
+    imgs.map((img) =>
+      img.complete && img.naturalHeight !== 0
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            img.addEventListener('load', () => resolve(), { once: true });
+            img.addEventListener('error', () => resolve(), { once: true });
+          }),
+    ),
+  );
+}
+
+async function captureChart(el: HTMLElement | null): Promise<string | null> {
+  if (!el) return null;
+  await waitForResources(el);
+  // Give the browser a frame + 500ms so Recharts SVG is fully painted.
+  await new Promise((r) => setTimeout(r, 500));
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+  });
+  return canvas.toDataURL('image/png');
+}
 
 const statusLabels: Record<string, string> = {
   backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', 'in-review': 'En Revisión', done: 'Completado',
@@ -20,6 +61,9 @@ const typeLabels: Record<string, string> = {
 export default function ReportsPage() {
   const { stories, iterations, team, groups, boards, currentBoardId, penaltyRate } = useProjectStore();
   const [generating, setGenerating] = useState(false);
+  const progressChartRef = useRef<HTMLDivElement>(null);
+  const workloadChartRef = useRef<HTMLDivElement>(null);
+  const costChartRef = useRef<HTMLDivElement>(null);
 
   const totalStories = stories.length;
   const doneStories = stories.filter((s) => s.status === 'done');
@@ -79,15 +123,61 @@ export default function ReportsPage() {
 
   const currentBoard = boards.find((b) => b.id === currentBoardId);
 
+  // Datasets para los gráficos del PDF
+  const progressChartData = boardSummaries.map((b) => ({
+    name: b.name.length > 14 ? b.name.slice(0, 12) + '…' : b.name,
+    Completados: b.donePoints,
+    Pendientes: Math.max(b.totalPoints - b.donePoints, 0),
+  }));
+  const workloadChartData = teamWorkload.map((m) => ({
+    name: m.name.split(' ')[0],
+    Activas: m.active,
+    Total: m.total,
+  }));
+  const costChartData = teamWorkload
+    .filter((m) => m.estCost > 0 || m.penalties > 0)
+    .map((m) => ({ name: m.name.split(' ')[0], value: Math.round(m.estCost) }));
+
   const handleDownloadPDF = async () => {
     setGenerating(true);
+    // Permite que React renderice el contenedor de captura visible.
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
     await new Promise((r) => setTimeout(r, 50));
 
     try {
+      // Capturar gráficos en paralelo (animaciones desactivadas en los componentes)
+      const [progressImg, workloadImg, costImg] = await Promise.all([
+        captureChart(progressChartRef.current),
+        captureChart(workloadChartRef.current),
+        captureChart(costChartRef.current),
+      ]);
+
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
       const margin = 15;
       let y = 20;
+
+      const addChart = (img: string | null, title: string, analysis: string) => {
+        if (!img) return;
+        const imgW = pageW - margin * 2;
+        const imgH = imgW * 0.45; // proporción cómoda para gráficos
+        if (y + imgH + 20 > pageH) { doc.addPage(); y = 20; }
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0);
+        doc.text(title, margin, y);
+        y += 4;
+        doc.addImage(img, 'PNG', margin, y, imgW, imgH);
+        y += imgH + 4;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100);
+        const lines = doc.splitTextToSize(analysis, pageW - margin * 2);
+        doc.text(lines, margin, y + 2);
+        doc.setTextColor(0);
+        y += lines.length * 4 + 8;
+      };
 
       doc.setFontSize(20);
       doc.setFont('helvetica', 'bold');
@@ -138,6 +228,16 @@ export default function ReportsPage() {
       doc.setTextColor(0);
       y += 4 + progressLines.length * 4 + 6;
 
+      // Gráfico de progreso por tablero
+      addChart(
+        progressImg,
+        'Gráfico: Progreso por Tablero (Story Points)',
+        `Análisis: La gráfica compara puntos completados vs. pendientes por tablero. ` +
+          (totalPoints > 0
+            ? `Avance global: ${pctGeneral}% (${donePoints} de ${totalPoints} SP).`
+            : 'No hay puntos asignados todavía.'),
+      );
+
       // Cost Analysis
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
@@ -171,6 +271,16 @@ export default function ReportsPage() {
       doc.text(costLines, margin, y + 4);
       doc.setTextColor(0);
       y += 4 + costLines.length * 4 + 6;
+
+      // Gráfico de distribución de costos por miembro
+      addChart(
+        costImg,
+        'Gráfico: Distribución de Costos Estimados por Miembro',
+        `Análisis: Refleja la concentración del presupuesto estimado entre miembros del equipo. ` +
+          (costChartData.length > 0
+            ? `Total estimado distribuido: $${totalEstimatedCost.toFixed(2)}.`
+            : 'Aún no hay costos asignados a los miembros.'),
+      );
 
       // Board summary
       if (y > 220) { doc.addPage(); y = 20; }
@@ -223,6 +333,16 @@ export default function ReportsPage() {
       doc.text(wlLines, margin, y + 4);
       doc.setTextColor(0);
       y += 4 + wlLines.length * 4 + 6;
+
+      // Gráfico de carga de trabajo del equipo
+      addChart(
+        workloadImg,
+        'Gráfico: Carga de Trabajo por Miembro',
+        `Análisis: Muestra tareas activas vs. totales por miembro. ` +
+          (topLoad
+            ? `${topLoad.name} lidera con ${topLoad.active} tareas activas de ${topLoad.total} totales.`
+            : 'Sin asignaciones registradas.'),
+      );
 
       // Penalties detail
       if (y > 200) { doc.addPage(); y = 20; }
@@ -503,6 +623,71 @@ export default function ReportsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Contenedor off-screen para captura de gráficos en el PDF.
+          Posicionado fuera de pantalla pero con tamaño real para que Recharts mida bien.
+          Animaciones desactivadas para captura instantánea. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          left: '-10000px',
+          top: 0,
+          width: '900px',
+          background: '#ffffff',
+          pointerEvents: 'none',
+          zIndex: -1,
+        }}
+      >
+        <div ref={progressChartRef} style={{ width: '900px', height: '380px', padding: 16, background: '#fff' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={progressChartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="name" stroke="#374151" />
+              <YAxis stroke="#374151" />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Completados" fill="#22c55e" isAnimationActive={false} />
+              <Bar dataKey="Pendientes" fill="#f59e0b" isAnimationActive={false} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div ref={workloadChartRef} style={{ width: '900px', height: '380px', padding: 16, background: '#fff' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={workloadChartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="name" stroke="#374151" />
+              <YAxis stroke="#374151" />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Activas" fill="#3b82f6" isAnimationActive={false} />
+              <Bar dataKey="Total" fill="#8b5cf6" isAnimationActive={false} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div ref={costChartRef} style={{ width: '900px', height: '380px', padding: 16, background: '#fff' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={costChartData.length > 0 ? costChartData : [{ name: 'Sin datos', value: 1 }]}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={130}
+                label
+                isAnimationActive={false}
+              >
+                {(costChartData.length > 0 ? costChartData : [{ name: 'Sin datos', value: 1 }]).map((_, i) => (
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }
