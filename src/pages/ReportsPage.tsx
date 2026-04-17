@@ -228,6 +228,16 @@ export default function ReportsPage() {
       doc.setTextColor(0);
       y += 4 + progressLines.length * 4 + 6;
 
+      // Gráfico de progreso por tablero
+      addChart(
+        progressImg,
+        'Gráfico: Progreso por Tablero (Story Points)',
+        `Análisis: La gráfica compara puntos completados vs. pendientes por tablero. ` +
+          (totalPoints > 0
+            ? `Avance global: ${pctGeneral}% (${donePoints} de ${totalPoints} SP).`
+            : 'No hay puntos asignados todavía.'),
+      );
+
       // Cost Analysis
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
