@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,47 @@ import { useProjectStore } from '@/store/useProjectStore';
 import { FileDown, BarChart3, Users, CheckCircle2, Clock, AlertTriangle, Loader2, DollarSign } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell,
+} from 'recharts';
+
+const CHART_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+
+// Wait until web fonts and all <img> resources are loaded before capture.
+async function waitForResources(root: HTMLElement) {
+  try {
+    if ((document as any).fonts?.ready) {
+      await (document as any).fonts.ready;
+    }
+  } catch { /* noop */ }
+  const imgs = Array.from(root.querySelectorAll('img'));
+  await Promise.all(
+    imgs.map((img) =>
+      img.complete && img.naturalHeight !== 0
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            img.addEventListener('load', () => resolve(), { once: true });
+            img.addEventListener('error', () => resolve(), { once: true });
+          }),
+    ),
+  );
+}
+
+async function captureChart(el: HTMLElement | null): Promise<string | null> {
+  if (!el) return null;
+  await waitForResources(el);
+  // Give the browser a frame + 500ms so Recharts SVG is fully painted.
+  await new Promise((r) => setTimeout(r, 500));
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+  });
+  return canvas.toDataURL('image/png');
+}
 
 const statusLabels: Record<string, string> = {
   backlog: 'Backlog', todo: 'Por Hacer', 'in-progress': 'En Progreso', 'in-review': 'En Revisión', done: 'Completado',
