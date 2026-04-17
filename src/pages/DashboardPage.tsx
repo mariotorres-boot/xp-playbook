@@ -112,7 +112,7 @@ export default function DashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="p-3 bg-secondary/50 rounded-lg">
               <p className="text-xs text-muted-foreground">Presupuesto Estimado</p>
               <p className="text-xl font-bold">${totalEstimatedCost.toFixed(2)}</p>
@@ -120,6 +120,14 @@ export default function DashboardPage() {
             <div className="p-3 bg-secondary/50 rounded-lg">
               <p className="text-xs text-muted-foreground">Costo Real</p>
               <p className="text-xl font-bold">${totalActualCost.toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-xs text-destructive">Total Descuentos Aplicados</p>
+              <p className="text-xl font-bold text-destructive">-${totalPenalties.toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+              <p className="text-xs text-primary">Presupuesto Real Ejecutado</p>
+              <p className="text-xl font-bold text-primary">${realExecutedBudget.toFixed(2)}</p>
             </div>
             <div className="p-3 bg-secondary/50 rounded-lg">
               <p className="text-xs text-muted-foreground">Costo Diario Equipo</p>
