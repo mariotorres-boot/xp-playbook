@@ -61,6 +61,9 @@ const typeLabels: Record<string, string> = {
 export default function ReportsPage() {
   const { stories, iterations, team, groups, boards, currentBoardId, penaltyRate } = useProjectStore();
   const [generating, setGenerating] = useState(false);
+  const progressChartRef = useRef<HTMLDivElement>(null);
+  const workloadChartRef = useRef<HTMLDivElement>(null);
+  const costChartRef = useRef<HTMLDivElement>(null);
 
   const totalStories = stories.length;
   const doneStories = stories.filter((s) => s.status === 'done');
