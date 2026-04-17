@@ -272,6 +272,16 @@ export default function ReportsPage() {
       doc.setTextColor(0);
       y += 4 + costLines.length * 4 + 6;
 
+      // Gráfico de distribución de costos por miembro
+      addChart(
+        costImg,
+        'Gráfico: Distribución de Costos Estimados por Miembro',
+        `Análisis: Refleja la concentración del presupuesto estimado entre miembros del equipo. ` +
+          (costChartData.length > 0
+            ? `Total estimado distribuido: $${totalEstimatedCost.toFixed(2)}.`
+            : 'Aún no hay costos asignados a los miembros.'),
+      );
+
       // Board summary
       if (y > 220) { doc.addPage(); y = 20; }
       doc.setFontSize(14);
