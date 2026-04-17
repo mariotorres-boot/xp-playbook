@@ -145,10 +145,39 @@ export default function ReportsPage() {
     await new Promise((r) => setTimeout(r, 50));
 
     try {
+      // Capturar gráficos en paralelo (animaciones desactivadas en los componentes)
+      const [progressImg, workloadImg, costImg] = await Promise.all([
+        captureChart(progressChartRef.current),
+        captureChart(workloadChartRef.current),
+        captureChart(costChartRef.current),
+      ]);
+
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
       const margin = 15;
       let y = 20;
+
+      const addChart = (img: string | null, title: string, analysis: string) => {
+        if (!img) return;
+        const imgW = pageW - margin * 2;
+        const imgH = imgW * 0.45; // proporción cómoda para gráficos
+        if (y + imgH + 20 > pageH) { doc.addPage(); y = 20; }
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0);
+        doc.text(title, margin, y);
+        y += 4;
+        doc.addImage(img, 'PNG', margin, y, imgW, imgH);
+        y += imgH + 4;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100);
+        const lines = doc.splitTextToSize(analysis, pageW - margin * 2);
+        doc.text(lines, margin, y + 2);
+        doc.setTextColor(0);
+        y += lines.length * 4 + 8;
+      };
 
       doc.setFontSize(20);
       doc.setFont('helvetica', 'bold');
