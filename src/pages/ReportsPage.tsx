@@ -124,7 +124,19 @@ export default function ReportsPage() {
         margin: { left: margin, right: margin }, theme: 'grid',
         headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' }, styles: { fontSize: 10 },
       });
-      y = (doc as any).lastAutoTable.finalY + 10;
+      y = (doc as any).lastAutoTable.finalY + 4;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(100);
+      const progressMsg = pctGeneral >= 80
+        ? `Análisis: Excelente cumplimiento del ${pctGeneral}%, indicando alta eficiencia en esta iteración.`
+        : pctGeneral >= 50
+        ? `Análisis: Avance moderado del ${pctGeneral}%. Se recomienda revisar bloqueos en tareas en progreso.`
+        : `Análisis: Avance bajo del ${pctGeneral}%. Es necesario reorganizar prioridades y atender bugs críticos.`;
+      const progressLines = doc.splitTextToSize(progressMsg, pageW - margin * 2);
+      doc.text(progressLines, margin, y + 4);
+      doc.setTextColor(0);
+      y += 4 + progressLines.length * 4 + 6;
 
       // Cost Analysis
       doc.setFontSize(14);
@@ -137,6 +149,8 @@ export default function ReportsPage() {
         body: [
           ['Presupuesto Estimado Total', `$${totalEstimatedCost.toFixed(2)}`],
           ['Costo Real Actual', `$${totalActualCost.toFixed(2)}`],
+          ['Total Descuentos Aplicados', `-$${totalPenalties.toFixed(2)}`],
+          ['Presupuesto Real Ejecutado', `$${realExecutedBudget.toFixed(2)}`],
           ['Costo Mensual Equipo', `$${team.reduce((s, m) => s + m.monthlySalary, 0).toLocaleString()}`],
           ['Costo Diario Equipo', `$${team.reduce((s, m) => s + m.dailyCost, 0).toFixed(2)}`],
           ['Costo Horario Equipo', `$${team.reduce((s, m) => s + m.hourlyCost, 0).toFixed(2)}`],
@@ -149,9 +163,14 @@ export default function ReportsPage() {
       doc.setFont('helvetica', 'italic');
       doc.setTextColor(100);
       const costPct = totalEstimatedCost > 0 ? Math.round((totalActualCost / totalEstimatedCost) * 100) : 0;
-      doc.text(`Análisis: Se ha consumido el ${costPct}% del presupuesto estimado. Avance del proyecto: ${pctGeneral}%.`, margin, y + 4);
+      const costMsg = `Análisis: Se ha consumido el ${costPct}% del presupuesto estimado con un avance del ${pctGeneral}%. ` +
+        (totalPenalties > 0
+          ? `Las penalizaciones por retraso reducen el presupuesto en $${totalPenalties.toFixed(2)} (${penaltyDetails.length} ${penaltyDetails.length === 1 ? 'tarea afectada' : 'tareas afectadas'}).`
+          : 'No se han aplicado descuentos por retraso en este periodo.');
+      const costLines = doc.splitTextToSize(costMsg, pageW - margin * 2);
+      doc.text(costLines, margin, y + 4);
       doc.setTextColor(0);
-      y += 12;
+      y += 4 + costLines.length * 4 + 6;
 
       // Board summary
       if (y > 220) { doc.addPage(); y = 20; }
