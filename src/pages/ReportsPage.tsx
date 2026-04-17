@@ -375,6 +375,18 @@ export default function ReportsPage() {
                 </div>
               );
             })}
+            <div className="mt-2 p-2 bg-muted/40 border-l-2 border-primary rounded text-xs text-muted-foreground italic">
+              {(() => {
+                const best = [...boardSummaries].sort((a, b) => {
+                  const pa = a.totalPoints > 0 ? a.donePoints / a.totalPoints : 0;
+                  const pb = b.totalPoints > 0 ? b.donePoints / b.totalPoints : 0;
+                  return pb - pa;
+                })[0];
+                if (!best || best.totalPoints === 0) return 'Análisis: Aún no hay puntos asignados a los tableros para evaluar el progreso.';
+                const pct = Math.round((best.donePoints / best.totalPoints) * 100);
+                return `Análisis: "${best.name}" lidera el avance con ${pct}% completado. Total estimado de inversión: $${boardSummaries.reduce((s, b) => s + b.cost, 0).toFixed(2)}.`;
+              })()}
+            </div>
           </CardContent>
         </Card>
 
@@ -403,9 +415,64 @@ export default function ReportsPage() {
                 </div>
               </div>
             ))}
+            <div className="mt-2 p-2 bg-muted/40 border-l-2 border-primary rounded text-xs text-muted-foreground italic">
+              {(() => {
+                const top = [...teamWorkload].sort((a, b) => b.active - a.active)[0];
+                if (!top || top.active === 0) return 'Análisis: No hay tareas activas en el equipo en este momento.';
+                return `Análisis: ${top.name} concentra la mayor carga (${top.active} activas). Distribuir el trabajo equilibradamente acelera la entrega.`;
+              })()}
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      <Card className={totalPenalties > 0 ? 'border-destructive/30' : undefined}>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <AlertTriangle className={`h-4 w-4 ${totalPenalties > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
+            Detalle de Penalizaciones y Descuentos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {penaltyDetails.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">No se han registrado descuentos por incumplimiento en este periodo.</p>
+          ) : (
+            <div className="space-y-2">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left border-b text-xs text-muted-foreground">
+                      <th className="py-2 pr-2">Actividad</th>
+                      <th className="py-2 pr-2">Empleado</th>
+                      <th className="py-2 pr-2 text-right">Retraso</th>
+                      <th className="py-2 pr-2 text-right">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {penaltyDetails.map((p) => (
+                      <tr key={p.story.id} className="border-b last:border-0">
+                        <td className="py-2 pr-2">{p.story.title}</td>
+                        <td className="py-2 pr-2 text-muted-foreground">{p.member.name}</td>
+                        <td className="py-2 pr-2 text-right">{p.delay} h</td>
+                        <td className="py-2 pr-2 text-right text-destructive font-medium">-${p.amount.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-destructive/10">
+                      <td colSpan={3} className="py-2 px-2 text-right font-bold">Total Acumulado</td>
+                      <td className="py-2 pr-2 text-right font-bold text-destructive">-${totalPenalties.toFixed(2)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <p className="text-xs text-muted-foreground italic mt-2">
+                Análisis: {penaltyDetails.length} {penaltyDetails.length === 1 ? 'actividad excedió' : 'actividades excedieron'} el tiempo estipulado, generando descuentos a una tasa del {penaltyRate}%.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
