@@ -46,6 +46,7 @@ export default function DashboardPage() {
   }, 0);
 
   const overdueTasks = boardStories.filter(s => s.actualHours && s.estimatedHours && s.actualHours > s.estimatedHours);
+  const realExecutedBudget = totalEstimatedCost - totalPenalties;
 
   const velocityData = iterations.map((it) => ({
     name: `Iter ${it.id}`,
