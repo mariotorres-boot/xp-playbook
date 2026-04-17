@@ -623,6 +623,71 @@ export default function ReportsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Contenedor off-screen para captura de gráficos en el PDF.
+          Posicionado fuera de pantalla pero con tamaño real para que Recharts mida bien.
+          Animaciones desactivadas para captura instantánea. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          left: '-10000px',
+          top: 0,
+          width: '900px',
+          background: '#ffffff',
+          pointerEvents: 'none',
+          zIndex: -1,
+        }}
+      >
+        <div ref={progressChartRef} style={{ width: '900px', height: '380px', padding: 16, background: '#fff' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={progressChartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="name" stroke="#374151" />
+              <YAxis stroke="#374151" />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Completados" fill="#22c55e" isAnimationActive={false} />
+              <Bar dataKey="Pendientes" fill="#f59e0b" isAnimationActive={false} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div ref={workloadChartRef} style={{ width: '900px', height: '380px', padding: 16, background: '#fff' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={workloadChartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="name" stroke="#374151" />
+              <YAxis stroke="#374151" />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Activas" fill="#3b82f6" isAnimationActive={false} />
+              <Bar dataKey="Total" fill="#8b5cf6" isAnimationActive={false} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div ref={costChartRef} style={{ width: '900px', height: '380px', padding: 16, background: '#fff' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={costChartData.length > 0 ? costChartData : [{ name: 'Sin datos', value: 1 }]}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={130}
+                label
+                isAnimationActive={false}
+              >
+                {(costChartData.length > 0 ? costChartData : [{ name: 'Sin datos', value: 1 }]).map((_, i) => (
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }
