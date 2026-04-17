@@ -313,7 +313,7 @@ export default function ReportsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary text-primary"><CheckCircle2 className="h-5 w-5" /></div>
@@ -336,6 +336,15 @@ export default function ReportsPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary text-primary"><DollarSign className="h-5 w-5" /></div>
             <div><p className="text-2xl font-bold">${totalEstimatedCost.toFixed(0)}</p><p className="text-xs text-muted-foreground">Presupuesto Est.</p></div>
+          </CardContent>
+        </Card>
+        <Card className="border-destructive/30">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-destructive/10 text-destructive"><AlertTriangle className="h-5 w-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-destructive">-${totalPenalties.toFixed(0)}</p>
+              <p className="text-xs text-muted-foreground">Descuentos · Real: ${realExecutedBudget.toFixed(0)}</p>
+            </div>
           </CardContent>
         </Card>
       </div>
