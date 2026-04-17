@@ -38,6 +38,19 @@ export default function ReportsPage() {
     return sum + (m && s.actualHours ? s.actualHours * m.hourlyCost : 0);
   }, 0);
 
+  // Penalty details
+  const penaltyDetails = stories
+    .map((s) => {
+      const m = team.find(t => t.id === s.assignee);
+      if (!m || !s.actualHours || !s.estimatedHours || s.actualHours <= s.estimatedHours) return null;
+      const delay = s.actualHours - s.estimatedHours;
+      const amount = delay * m.hourlyCost * (penaltyRate / 100);
+      return { story: s, member: m, delay, amount };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+  const totalPenalties = penaltyDetails.reduce((sum, p) => sum + p.amount, 0);
+  const realExecutedBudget = totalEstimatedCost - totalPenalties;
+
   const teamWorkload = team.map((m) => {
     const assigned = stories.filter((s) => s.assignee === m.id);
     const active = assigned.filter((s) => s.status !== 'done');
