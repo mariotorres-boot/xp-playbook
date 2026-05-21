@@ -60,7 +60,7 @@ export default function BoardPage() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Tablero</h1>
+            <h1 className="text-2xl font-bold">{boards.find(b => b.id === currentBoardId)?.name || 'Tablero'}</h1>
             <p className="text-sm text-muted-foreground">Iteración {currentIteration}</p>
           </div>
         </div>
