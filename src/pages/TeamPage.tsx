@@ -100,6 +100,9 @@ export default function TeamPage() {
                     </Button>
                   </div>
                 </div>
+                {m.responsibilities ? (
+                  <p className="mt-3 text-xs text-muted-foreground leading-snug">{m.responsibilities}</p>
+                ) : null}
                 <div className="mt-3 text-sm text-muted-foreground">
                   {active.length} activas · {assigned.length} totales
                 </div>
