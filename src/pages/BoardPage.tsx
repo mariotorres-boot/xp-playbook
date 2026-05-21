@@ -21,7 +21,7 @@ export default function BoardPage() {
   const [boardName, setBoardName] = useState('');
   const [editBoardId, setEditBoardId] = useState<string | null>(null);
 
-  const iterStories = stories.filter((s) => s.iteration === currentIteration && (s.boardId === currentBoardId || (!s.boardId && currentBoardId === 'b1')));
+  const iterStories = stories.filter((s) => s.boardId === currentBoardId);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
