@@ -7,6 +7,8 @@ export interface TeamMember {
   name: string;
   avatar?: string;
   role: 'developer' | 'tester' | 'coach';
+  roleTitle?: string;
+  responsibilities?: string;
   monthlySalary: number;
   dailyCost: number;
   hourlyCost: number;
