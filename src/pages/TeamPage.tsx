@@ -86,7 +86,10 @@ export default function TeamPage() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{m.name}</p>
-                    <Badge variant="outline" className="text-xs capitalize">{roleLabels[m.role] || m.role}</Badge>
+                    {m.roleTitle ? (
+                      <p className="text-xs text-primary font-medium">{m.roleTitle}</p>
+                    ) : null}
+                    <Badge variant="outline" className="text-xs capitalize mt-1">{roleLabels[m.role] || m.role}</Badge>
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditMember(m)}>
