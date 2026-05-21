@@ -25,6 +25,8 @@ export default function TeamPage() {
   const [editMember, setEditMember] = useState<TeamMember | null>(null);
   const [memberName, setMemberName] = useState('');
   const [memberRole, setMemberRole] = useState<'developer' | 'tester' | 'coach'>('developer');
+  const [memberRoleTitle, setMemberRoleTitle] = useState('');
+  const [memberResponsibilities, setMemberResponsibilities] = useState('');
   const [memberSalary, setMemberSalary] = useState(0);
 
   const openNewGroup = () => { setEditGroup(null); setGroupName(''); setSelectedMembers([]); setGroupDialogOpen(true); };
@@ -37,14 +39,15 @@ export default function TeamPage() {
   };
   const toggleMember = (id: string) => setSelectedMembers((prev) => prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]);
 
-  const openNewMember = () => { setEditMember(null); setMemberName(''); setMemberRole('developer'); setMemberSalary(0); setMemberDialogOpen(true); };
-  const openEditMember = (m: TeamMember) => { setEditMember(m); setMemberName(m.name); setMemberRole(m.role); setMemberSalary(m.monthlySalary); setMemberDialogOpen(true); };
+  const openNewMember = () => { setEditMember(null); setMemberName(''); setMemberRole('developer'); setMemberRoleTitle(''); setMemberResponsibilities(''); setMemberSalary(0); setMemberDialogOpen(true); };
+  const openEditMember = (m: TeamMember) => { setEditMember(m); setMemberName(m.name); setMemberRole(m.role); setMemberRoleTitle(m.roleTitle || ''); setMemberResponsibilities(m.responsibilities || ''); setMemberSalary(m.monthlySalary); setMemberDialogOpen(true); };
   const handleSaveMember = () => {
     if (!memberName.trim()) return;
     const dailyCost = Math.round((memberSalary / 30) * 100) / 100;
     const hourlyCost = Math.round((memberSalary / 30 / 8) * 100) / 100;
-    if (editMember) updateTeamMember(editMember.id, { name: memberName, role: memberRole, monthlySalary: memberSalary, dailyCost, hourlyCost });
-    else addTeamMember({ id: `m${Date.now()}`, name: memberName, role: memberRole, monthlySalary: memberSalary, dailyCost, hourlyCost });
+    const payload = { name: memberName, role: memberRole, roleTitle: memberRoleTitle, responsibilities: memberResponsibilities, monthlySalary: memberSalary, dailyCost, hourlyCost };
+    if (editMember) updateTeamMember(editMember.id, payload);
+    else addTeamMember({ id: `m${Date.now()}`, ...payload });
     setMemberDialogOpen(false);
   };
   const handleDeleteMember = (id: string) => deleteTeamMember(id);
