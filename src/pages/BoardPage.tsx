@@ -21,7 +21,7 @@ export default function BoardPage() {
   const [boardName, setBoardName] = useState('');
   const [editBoardId, setEditBoardId] = useState<string | null>(null);
 
-  const iterStories = stories.filter((s) => s.iteration === currentIteration && (s.boardId === currentBoardId || (!s.boardId && currentBoardId === 'b1')));
+  const iterStories = stories.filter((s) => s.boardId === currentBoardId);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -60,7 +60,7 @@ export default function BoardPage() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Tablero</h1>
+            <h1 className="text-2xl font-bold">{boards.find(b => b.id === currentBoardId)?.name || 'Tablero'}</h1>
             <p className="text-sm text-muted-foreground">Iteración {currentIteration}</p>
           </div>
         </div>

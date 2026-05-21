@@ -8,35 +8,96 @@ const calcCosts = (salary: number) => ({
 });
 
 const SAMPLE_TEAM: TeamMember[] = [
-  { id: '1', name: 'Alice Chen', role: 'developer', monthlySalary: 3000, ...calcCosts(3000) },
-  { id: '2', name: 'Bob Martinez', role: 'developer', monthlySalary: 3200, ...calcCosts(3200) },
-  { id: '3', name: 'Carol Kim', role: 'developer', monthlySalary: 2800, ...calcCosts(2800) },
-  { id: '4', name: 'Dave Patel', role: 'tester', monthlySalary: 2500, ...calcCosts(2500) },
-  { id: '5', name: 'Eve Johnson', role: 'coach', monthlySalary: 4000, ...calcCosts(4000) },
+  {
+    id: '1',
+    name: 'Melissa Méndez',
+    role: 'developer',
+    roleTitle: 'UI/UX, Frontend & Project Management',
+    responsibilities: 'Gestión del tablero, diseño de vistas, maquetación, experiencia del usuario y flujos de negocio.',
+    monthlySalary: 3500,
+    ...calcCosts(3500),
+  },
+  {
+    id: '2',
+    name: 'Mario Torres',
+    role: 'developer',
+    roleTitle: 'Backend & Arquitectura de BD',
+    responsibilities: 'Estructura de la base de datos, seguridad, creación de APIs y lógica matemática (fórmulas de inventario).',
+    monthlySalary: 3500,
+    ...calcCosts(3500),
+  },
+  {
+    id: '3',
+    name: 'Daviz Azucena',
+    role: 'tester',
+    roleTitle: 'Full-Stack & QA (Pruebas)',
+    responsibilities: 'Conexión entre el frontend y backend, desarrollo de la carga masiva y pruebas de estrés del sistema.',
+    monthlySalary: 3500,
+    ...calcCosts(3500),
+  },
 ];
 
 const SAMPLE_GROUPS: Group[] = [
-  { id: 'g1', name: 'Frontend', members: ['1', '3'] },
-  { id: 'g2', name: 'Backend', members: ['2', '4'] },
+  { id: 'g1', name: 'Equipo de Desarrollo', members: ['1', '2', '3'] },
 ];
 
-const DEFAULT_BOARD: Board = { id: 'b1', name: 'Tablero Principal' };
-
-const SAMPLE_STORIES: UserStory[] = [
-  { id: 's1', title: 'Flujo de autenticación de usuarios', description: 'Como usuario quiero iniciar sesión para acceder a mis proyectos', assignee: '1', groupId: 'g1', priority: 'high', storyPoints: 5, status: 'in-progress', iteration: 1, type: 'user-story', createdAt: '2026-04-01', testCriteria: 'El usuario puede iniciar sesión con correo y contraseña', boardId: 'b1', estimatedHours: 16 },
-  { id: 's2', title: 'Widget de analíticas del panel', description: 'Mostrar gráfico de velocidad y progreso de iteración', assignee: '3', priority: 'medium', storyPoints: 3, status: 'todo', iteration: 1, type: 'user-story', createdAt: '2026-04-02', boardId: 'b1', estimatedHours: 8 },
-  { id: 's3', title: 'Configurar pipeline CI/CD', description: 'Configurar pruebas automatizadas y despliegue', assignee: '2', priority: 'critical', storyPoints: 8, status: 'done', iteration: 1, type: 'task', createdAt: '2026-03-28', testCriteria: 'Todas las pruebas pasan al hacer push a main', boardId: 'b1', estimatedHours: 24, actualHours: 20 },
-  { id: 's4', title: 'Escribir pruebas unitarias para autenticación', description: 'TDD: Escribir pruebas antes de la implementación', assignee: '4', groupId: 'g2', priority: 'high', storyPoints: 3, status: 'in-progress', iteration: 1, type: 'tdd-task', createdAt: '2026-04-03', testCriteria: '90% de cobertura de código en módulo de autenticación', boardId: 'b1', estimatedHours: 12 },
-  { id: 's5', title: 'Limitación de tasa en API', description: 'Implementar limitación de tasa para todos los endpoints de la API', priority: 'medium', storyPoints: 5, status: 'backlog', type: 'user-story', createdAt: '2026-04-04', boardId: 'b1', estimatedHours: 16 },
-  { id: 's6', title: 'Diseño responsivo móvil', description: 'Asegurar que todas las vistas funcionen en dispositivos móviles', priority: 'low', storyPoints: 3, status: 'backlog', type: 'user-story', createdAt: '2026-04-05', boardId: 'b1', estimatedHours: 10 },
-  { id: 's7', title: 'Corregir bug de redirección en login', description: 'Los usuarios no son redirigidos después de iniciar sesión', assignee: '1', priority: 'critical', storyPoints: 2, status: 'todo', iteration: 1, type: 'bug', createdAt: '2026-04-06', boardId: 'b1', estimatedHours: 4 },
-  { id: 's8', title: 'Scripts de migración de base de datos', description: 'Crear sistema de migración para cambios de esquema', priority: 'high', storyPoints: 5, status: 'backlog', type: 'task', createdAt: '2026-04-01', boardId: 'b1', estimatedHours: 20 },
+const SPRINT_BOARDS: Board[] = [
+  { id: 'b1', name: 'Sprint 1 · Cimientos y Acceso' },
+  { id: 'b2', name: 'Sprint 2 · Catálogo y Carga Masiva' },
+  { id: 'b3', name: 'Sprint 3 · Compras e Inventario' },
+  { id: 'b4', name: 'Sprint 4 · Ventas a Medida' },
+  { id: 'b5', name: 'Sprint 5 · Finanzas y Cierre' },
 ];
+
+// Sprint task definitions: [boardId, iteration, member, title, description, estHours, status]
+type SprintTaskDef = [string, number, string, string, string, number, Status];
+const SPRINT_TASKS: SprintTaskDef[] = [
+  // Sprint 1 (done)
+  ['b1', 1, '1', 'Adaptar dashboard y menú lateral', 'Adaptar la plantilla del dashboard en Lovable, crear el menú lateral y diseñar las pantallas de Login e Inicio.', 16, 'done'],
+  ['b1', 1, '2', 'Modelar base de datos y servidor', 'Diseñar el modelo de la base de datos (tablas, relaciones) y configurar el servidor y los repositorios.', 18, 'done'],
+  ['b1', 1, '3', 'Autenticación y permisos por rol', 'Desarrollar la lógica de autenticación, conectar el Login con la base de datos y configurar los permisos de los 3 roles.', 14, 'done'],
+  // Sprint 2 (done)
+  ['b2', 2, '1', 'Interfaz de carga (Drag & Drop) y catálogo', 'Diseñar la interfaz de carga de archivos drag & drop y la tabla visual del catálogo general.', 14, 'done'],
+  ['b2', 2, '2', 'CRUD de productos y servicios', 'Desarrollar el CRUD para gestionar productos físicos y servicios en la base de datos.', 16, 'done'],
+  ['b2', 2, '3', 'Importación CSV con validaciones', 'Programar el script de importación CSV con validaciones de errores y campos obligatorios.', 16, 'done'],
+  // Sprint 3 (done)
+  ['b3', 3, '1', 'UI Proveedores, Compras e Inventario', 'Diseñar el directorio de proveedores, el formulario de nueva compra y el visor de inventario con alertas de stock bajo.', 16, 'done'],
+  ['b3', 3, '2', 'Cálculo de inventario en tiempo real', 'Programar la consulta que calcula inventario: (Carga Inicial + Compras) − Ventas.', 18, 'done'],
+  ['b3', 3, '3', 'CRUD Proveedores y conexión de compras', 'Desarrollar CRUD de proveedores, conectar el formulario de compras y verificar suma al inventario.', 14, 'done'],
+  // Sprint 4 (done)
+  ['b4', 4, '1', 'Carrito de cotizaciones y contrato', 'Diseñar el carrito de cotizaciones a medida y la vista del contrato/ticket.', 16, 'done'],
+  ['b4', 4, '2', 'Trigger de descuento de stock físico', 'Programar el trigger que identifica ítems físicos y los resta del inventario al confirmar venta.', 16, 'done'],
+  ['b4', 4, '3', 'Constructor de cotizaciones y PDF', 'Conectar el constructor de cotizaciones, calcular totales y generar el PDF del contrato.', 18, 'done'],
+  // Sprint 5 (current)
+  ['b5', 5, '1', 'Panel de Reportes y manuales', 'Diseñar el panel de reportes financieros, la vista de cuentas por cobrar y redactar manuales de usuario.', 16, 'in-progress'],
+  ['b5', 5, '2', 'Libro mayor interno', 'Estructurar el libro mayor conectando ventas aprobadas (ingresos) y compras (egresos) automáticamente.', 18, 'in-progress'],
+  ['b5', 5, '3', 'Pruebas de estrés y bugfixing', 'Pruebas de estrés del ciclo completo (CSV → compra → venta → estado contable e inventario) y solución de bugs.', 20, 'todo'],
+];
+
+const SAMPLE_STORIES: UserStory[] = SPRINT_TASKS.map(([boardId, iter, assignee, title, description, estimatedHours, status], idx) => ({
+  id: `s${idx + 1}`,
+  title,
+  description,
+  assignee,
+  groupId: 'g1',
+  priority: 'high',
+  storyPoints: Math.max(2, Math.round(estimatedHours / 4)),
+  status,
+  iteration: iter,
+  type: 'user-story',
+  createdAt: '2026-05-01',
+  boardId,
+  estimatedHours,
+  actualHours: status === 'done' ? estimatedHours : undefined,
+  testCriteria: 'Funcionalidad validada y aceptada por el equipo.',
+}));
 
 const SAMPLE_ITERATIONS: Iteration[] = [
-  { id: 1, name: 'Iteración 1 - Base', startDate: '2026-04-01', endDate: '2026-04-14', velocity: 18, stories: ['s1', 's2', 's3', 's4', 's7'] },
-  { id: 2, name: 'Iteración 2 - Funcionalidades', startDate: '2026-04-15', endDate: '2026-04-28', stories: [] },
-  { id: 3, name: 'Iteración 3 - Pulido', startDate: '2026-04-29', endDate: '2026-05-12', stories: [] },
+  { id: 1, name: 'Sprint 1 · Cimientos y Acceso', startDate: '2026-05-01', endDate: '2026-05-05', velocity: 12, stories: SAMPLE_STORIES.filter(s => s.iteration === 1).map(s => s.id) },
+  { id: 2, name: 'Sprint 2 · Catálogo y Carga Masiva', startDate: '2026-05-06', endDate: '2026-05-10', velocity: 12, stories: SAMPLE_STORIES.filter(s => s.iteration === 2).map(s => s.id) },
+  { id: 3, name: 'Sprint 3 · Compras e Inventario', startDate: '2026-05-11', endDate: '2026-05-15', velocity: 12, stories: SAMPLE_STORIES.filter(s => s.iteration === 3).map(s => s.id) },
+  { id: 4, name: 'Sprint 4 · Ventas a Medida', startDate: '2026-05-16', endDate: '2026-05-20', velocity: 12, stories: SAMPLE_STORIES.filter(s => s.iteration === 4).map(s => s.id) },
+  { id: 5, name: 'Sprint 5 · Finanzas y Cierre', startDate: '2026-05-21', endDate: '2026-05-26', stories: SAMPLE_STORIES.filter(s => s.iteration === 5).map(s => s.id) },
 ];
 
 interface ProjectState {
@@ -79,10 +140,10 @@ export const useProjectStore = create<ProjectState>()(
       iterations: SAMPLE_ITERATIONS,
       team: SAMPLE_TEAM,
       groups: SAMPLE_GROUPS,
-      boards: [DEFAULT_BOARD],
+      boards: SPRINT_BOARDS,
       activityLogs: [],
-      currentIteration: 1,
-      currentBoardId: 'b1',
+      currentIteration: 5,
+      currentBoardId: 'b5',
       isLoggedIn: false,
       currentUser: '',
       penaltyRate: 10,
@@ -141,6 +202,6 @@ export const useProjectStore = create<ProjectState>()(
       login: (email) => set({ isLoggedIn: true, currentUser: email }),
       logout: () => set({ isLoggedIn: false, currentUser: '' }),
     }),
-    { name: 'xp-project-store-v3' }
+    { name: 'xp-project-store-v4' }
   )
 );

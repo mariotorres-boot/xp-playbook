@@ -25,6 +25,8 @@ export default function TeamPage() {
   const [editMember, setEditMember] = useState<TeamMember | null>(null);
   const [memberName, setMemberName] = useState('');
   const [memberRole, setMemberRole] = useState<'developer' | 'tester' | 'coach'>('developer');
+  const [memberRoleTitle, setMemberRoleTitle] = useState('');
+  const [memberResponsibilities, setMemberResponsibilities] = useState('');
   const [memberSalary, setMemberSalary] = useState(0);
 
   const openNewGroup = () => { setEditGroup(null); setGroupName(''); setSelectedMembers([]); setGroupDialogOpen(true); };
@@ -37,14 +39,15 @@ export default function TeamPage() {
   };
   const toggleMember = (id: string) => setSelectedMembers((prev) => prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]);
 
-  const openNewMember = () => { setEditMember(null); setMemberName(''); setMemberRole('developer'); setMemberSalary(0); setMemberDialogOpen(true); };
-  const openEditMember = (m: TeamMember) => { setEditMember(m); setMemberName(m.name); setMemberRole(m.role); setMemberSalary(m.monthlySalary); setMemberDialogOpen(true); };
+  const openNewMember = () => { setEditMember(null); setMemberName(''); setMemberRole('developer'); setMemberRoleTitle(''); setMemberResponsibilities(''); setMemberSalary(0); setMemberDialogOpen(true); };
+  const openEditMember = (m: TeamMember) => { setEditMember(m); setMemberName(m.name); setMemberRole(m.role); setMemberRoleTitle(m.roleTitle || ''); setMemberResponsibilities(m.responsibilities || ''); setMemberSalary(m.monthlySalary); setMemberDialogOpen(true); };
   const handleSaveMember = () => {
     if (!memberName.trim()) return;
     const dailyCost = Math.round((memberSalary / 30) * 100) / 100;
     const hourlyCost = Math.round((memberSalary / 30 / 8) * 100) / 100;
-    if (editMember) updateTeamMember(editMember.id, { name: memberName, role: memberRole, monthlySalary: memberSalary, dailyCost, hourlyCost });
-    else addTeamMember({ id: `m${Date.now()}`, name: memberName, role: memberRole, monthlySalary: memberSalary, dailyCost, hourlyCost });
+    const payload = { name: memberName, role: memberRole, roleTitle: memberRoleTitle, responsibilities: memberResponsibilities, monthlySalary: memberSalary, dailyCost, hourlyCost };
+    if (editMember) updateTeamMember(editMember.id, payload);
+    else addTeamMember({ id: `m${Date.now()}`, ...payload });
     setMemberDialogOpen(false);
   };
   const handleDeleteMember = (id: string) => deleteTeamMember(id);
@@ -83,7 +86,10 @@ export default function TeamPage() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{m.name}</p>
-                    <Badge variant="outline" className="text-xs capitalize">{roleLabels[m.role] || m.role}</Badge>
+                    {m.roleTitle ? (
+                      <p className="text-xs text-primary font-medium">{m.roleTitle}</p>
+                    ) : null}
+                    <Badge variant="outline" className="text-xs capitalize mt-1">{roleLabels[m.role] || m.role}</Badge>
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditMember(m)}>
@@ -94,6 +100,9 @@ export default function TeamPage() {
                     </Button>
                   </div>
                 </div>
+                {m.responsibilities ? (
+                  <p className="mt-3 text-xs text-muted-foreground leading-snug">{m.responsibilities}</p>
+                ) : null}
                 <div className="mt-3 text-sm text-muted-foreground">
                   {active.length} activas · {assigned.length} totales
                 </div>
@@ -224,6 +233,19 @@ export default function TeamPage() {
                   <SelectItem value="coach">Coach</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Título del rol</Label>
+              <Input value={memberRoleTitle} onChange={(e) => setMemberRoleTitle(e.target.value)} placeholder="Ej: UI/UX, Frontend & PM" />
+            </div>
+            <div>
+              <Label>Responsabilidades</Label>
+              <textarea
+                value={memberResponsibilities}
+                onChange={(e) => setMemberResponsibilities(e.target.value)}
+                placeholder="Describe las principales responsabilidades..."
+                className="w-full min-h-[72px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
               <Label>Salario Mensual ($)</Label>
