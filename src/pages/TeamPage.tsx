@@ -235,6 +235,19 @@ export default function TeamPage() {
               </Select>
             </div>
             <div>
+              <Label>Título del rol</Label>
+              <Input value={memberRoleTitle} onChange={(e) => setMemberRoleTitle(e.target.value)} placeholder="Ej: UI/UX, Frontend & PM" />
+            </div>
+            <div>
+              <Label>Responsabilidades</Label>
+              <textarea
+                value={memberResponsibilities}
+                onChange={(e) => setMemberResponsibilities(e.target.value)}
+                placeholder="Describe las principales responsabilidades..."
+                className="w-full min-h-[72px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
               <Label>Salario Mensual ($)</Label>
               <Input type="number" min={0} value={memberSalary} onChange={(e) => setMemberSalary(Number(e.target.value))} placeholder="Ej: 3000" />
             </div>
