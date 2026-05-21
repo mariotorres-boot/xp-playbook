@@ -202,6 +202,6 @@ export const useProjectStore = create<ProjectState>()(
       login: (email) => set({ isLoggedIn: true, currentUser: email }),
       logout: () => set({ isLoggedIn: false, currentUser: '' }),
     }),
-    { name: 'xp-project-store-v3' }
+    { name: 'xp-project-store-v4' }
   )
 );
