@@ -72,7 +72,29 @@ const SPRINT_TASKS: SprintTaskDef[] = [
   ['b5', 5, '1', 'Panel de Reportes y manuales', 'Diseñar el panel de reportes financieros, la vista de cuentas por cobrar y redactar manuales de usuario.', 16, 'in-progress'],
   ['b5', 5, '2', 'Libro mayor interno', 'Estructurar el libro mayor conectando ventas aprobadas (ingresos) y compras (egresos) automáticamente.', 18, 'in-progress'],
   ['b5', 5, '3', 'Pruebas de estrés y bugfixing', 'Pruebas de estrés del ciclo completo (CSV → compra → venta → estado contable e inventario) y solución de bugs.', 20, 'todo'],
+  // Detalle de trabajo completado (Melissa · UI/UX & Frontend)
+  ['b1', 1, '1', 'Framework CSS y paleta corporativa', 'Inyección de Tailwind CSS vía CDN y extensión de la configuración para establecer la paleta corporativa (verde musgo, terracota, pizarra) con apariencia sobria y premium.', 6, 'done'],
+  ['b1', 1, '1', 'Tipografía e iconografía', 'Integración de Google Fonts (Playfair Display para encabezados, Inter para datos) y FontAwesome para la señalética visual.', 4, 'done'],
+  ['b1', 1, '1', 'Layout principal (sidebar + header)', 'Maquetación de la estructura principal: menú lateral persistente, encabezado superior de estado y área de trabajo central dinámica.', 8, 'done'],
+  ['b1', 1, '1', 'Sistema de notificaciones (Toast)', 'Componente flotante animado de notificaciones con retroalimentación de éxito o error tras cada acción.', 4, 'done'],
+  // Mario · Backend & Estado
+  ['b2', 2, '2', 'Fuente única de verdad (state)', 'Definición del objeto global state como cerebro relacional en memoria que centraliza toda la información de la app.', 8, 'done'],
+  ['b2', 2, '2', 'Población de catálogos iniciales', 'Carga de arreglos con datos JSON de prueba: Prospectos, Clientes, Insumos Físicos (costos y stock), Empleados y catálogo prearmado de Planes de Previsión.', 6, 'done'],
+  // Daviz · Auth & QA
+  ['b1', 1, '3', 'Interfaz de Login y bloqueo', 'Maquetación de la pantalla de Login que se superpone a la aplicación y bloquea el acceso al área de trabajo.', 6, 'done'],
+  ['b1', 1, '3', 'Validación de correo y roles por DOM', 'Validación frontend que exige correo @funerariajardin.com y asignación de rol superior cuando contiene "admin", ocultando menús financieros y de compras vía CSS.', 8, 'done'],
+  // Melissa · Modales
+  ['b2', 2, '1', 'Motor de modales único', 'Contenedor modal-backdrop único e inyección HTML dinámica vía openModal(type) para captar leads, vender planes, ajustar stock y contratar empleados.', 8, 'done'],
+  ['b2', 2, '1', 'Intercepción de formularios', 'handleFormSubmit con preventDefault para capturar datos del usuario y guardarlos en los arreglos del estado global, simulando un POST a una API.', 6, 'done'],
+  // Sprint 3 · Flujos de negocio
+  ['b3', 3, '1', 'CRM Kanban de prospectos', 'Renderizado que filtra prospectos por fase, dibuja tarjetas en 4 columnas y permite cambiar la etapa del prospecto desde la propia tarjeta.', 10, 'done'],
+  ['b3', 3, '2', 'Búsqueda de inventario en tiempo real', 'Campo de búsqueda con filtrado oninput y resaltado por colores (rojo/amarillo) cuando el stock cae a niveles críticos.', 8, 'done'],
+  // Sprint 4 · Ventas
+  ['b4', 4, '2', 'Descuento en cascada de insumos', 'Función que desglosa los insumos requeridos por un Plan, verifica stock disponible y, al aprobar la venta, descuenta automáticamente el inventario.', 12, 'done'],
+  // Sprint 5 · Contabilidad UI
+  ['b5', 5, '1', 'Sistema contable por pestañas', 'Navegación interna (Tabs) entre Facturas, Libro Diario (historial de auditoría global) y cálculo dinámico de ingresos vs. costos para mostrar la rentabilidad.', 10, 'in-progress'],
 ];
+
 
 const SAMPLE_STORIES: UserStory[] = SPRINT_TASKS.map(([boardId, iter, assignee, title, description, estimatedHours, status], idx) => ({
   id: `s${idx + 1}`,
@@ -202,6 +224,6 @@ export const useProjectStore = create<ProjectState>()(
       login: (email) => set({ isLoggedIn: true, currentUser: email }),
       logout: () => set({ isLoggedIn: false, currentUser: '' }),
     }),
-    { name: 'xp-project-store-v4' }
+    { name: 'xp-project-store-v5' }
   )
 );
