@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
+import { HelpButton } from './HelpButton';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +13,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </header>
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
+        <HelpButton />
       </div>
     </SidebarProvider>
   );
