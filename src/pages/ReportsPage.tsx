@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useProjectStore } from '@/store/useProjectStore';
-import { FileDown, BarChart3, Users, CheckCircle2, Clock, AlertTriangle, Loader2, DollarSign } from 'lucide-react';
+import { FileDown, BarChart3, Users, CheckCircle2, Clock, AlertTriangle, Loader2, DollarSign, ChevronDown, ChevronRight } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
@@ -61,6 +61,7 @@ const typeLabels: Record<string, string> = {
 export default function ReportsPage() {
   const { stories, iterations, team, groups, boards, currentBoardId, penaltyRate } = useProjectStore();
   const [generating, setGenerating] = useState(false);
+  const [expandedMember, setExpandedMember] = useState<string | null>(null);
   const progressChartRef = useRef<HTMLDivElement>(null);
   const workloadChartRef = useRef<HTMLDivElement>(null);
   const costChartRef = useRef<HTMLDivElement>(null);
@@ -517,24 +518,93 @@ export default function ReportsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {teamWorkload.map((m) => (
-              <div key={m.id} className="flex items-center justify-between p-2 bg-secondary/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
-                    {m.name.split(' ').map((n) => n[0]).join('')}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{m.name}</p>
-                    <p className="text-xs text-muted-foreground">${m.estCost.toFixed(0)} est. · {m.points} SP</p>
-                  </div>
+            {teamWorkload.map((m) => {
+              const memberStories = stories.filter((s) => s.assignee === m.id);
+              const doneCount = memberStories.filter((s) => s.status === 'done').length;
+              const activeCount = memberStories.filter((s) => s.status !== 'done').length;
+              const totalHoursReal = memberStories.reduce((sum, s) => sum + (s.actualHours || 0), 0);
+              const isOpen = expandedMember === m.id;
+              return (
+                <div key={m.id} className="bg-secondary/50 rounded-lg overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedMember(isOpen ? null : m.id)}
+                    className="w-full flex items-center justify-between p-2 hover:bg-secondary transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
+                        {m.name.split(' ').map((n) => n[0]).join('')}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-medium">{m.name}</p>
+                        <p className="text-xs text-muted-foreground">${m.estCost.toFixed(0)} est. · {m.points} SP</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold">{m.active}</p>
+                      <p className="text-xs text-muted-foreground">activas</p>
+                      {m.penalties > 0 && <p className="text-xs text-destructive">-${m.penalties.toFixed(0)}</p>}
+                    </div>
+                  </button>
+                  {isOpen && (
+                    <div className="px-3 pb-3 pt-1 border-t bg-background/40">
+                      <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
+                        <div className="p-2 rounded bg-muted/50">
+                          <p className="text-muted-foreground">Total</p>
+                          <p className="font-bold text-sm">{memberStories.length}</p>
+                        </div>
+                        <div className="p-2 rounded bg-muted/50">
+                          <p className="text-muted-foreground">Completadas</p>
+                          <p className="font-bold text-sm text-primary">{doneCount}</p>
+                        </div>
+                        <div className="p-2 rounded bg-muted/50">
+                          <p className="text-muted-foreground">Hrs Reales</p>
+                          <p className="font-bold text-sm">{totalHoursReal}h</p>
+                        </div>
+                      </div>
+                      {memberStories.length === 0 ? (
+                        <p className="text-xs italic text-muted-foreground py-2">Sin actividades asignadas.</p>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-left border-b text-muted-foreground">
+                                <th className="py-1 pr-2">Actividad</th>
+                                <th className="py-1 pr-2">Estado</th>
+                                <th className="py-1 pr-2 text-right">SP</th>
+                                <th className="py-1 pr-2 text-right">Hrs</th>
+                                <th className="py-1 pr-2 text-right">Costo</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {memberStories.map((s) => {
+                                const cost = s.estimatedHours ? s.estimatedHours * m.hourlyCost : 0;
+                                return (
+                                  <tr key={s.id} className="border-b last:border-0">
+                                    <td className="py-1 pr-2">{s.title}</td>
+                                    <td className="py-1 pr-2">
+                                      <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                        {statusLabels[s.status] || s.status}
+                                      </Badge>
+                                    </td>
+                                    <td className="py-1 pr-2 text-right">{s.storyPoints}</td>
+                                    <td className="py-1 pr-2 text-right text-muted-foreground">
+                                      {s.actualHours || 0}/{s.estimatedHours || 0}h
+                                    </td>
+                                    <td className="py-1 pr-2 text-right">{cost > 0 ? `$${cost.toFixed(0)}` : '—'}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold">{m.active}</p>
-                  <p className="text-xs text-muted-foreground">activas</p>
-                  {m.penalties > 0 && <p className="text-xs text-destructive">-${m.penalties.toFixed(0)}</p>}
-                </div>
-              </div>
-            ))}
+              );
+            })}
             <div className="mt-2 p-2 bg-muted/40 border-l-2 border-primary rounded text-xs text-muted-foreground italic">
               {(() => {
                 const top = [...teamWorkload].sort((a, b) => b.active - a.active)[0];
