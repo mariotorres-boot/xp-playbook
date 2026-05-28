@@ -79,7 +79,7 @@ export default function BackupPage() {
         if (k in data) (allowed as Record<string, unknown>)[k] = data[k];
       });
       if (!confirm('Esto reemplazará los datos actuales del sistema. ¿Continuar?')) return;
-      restoreBackup(allowed);
+      restoreBackup(allowed as Parameters<typeof restoreBackup>[0]);
       toast.success('Datos restaurados correctamente');
     } catch (err) {
       toast.error('Archivo de respaldo inválido');
