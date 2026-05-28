@@ -14,6 +14,7 @@ import IterationsPage from "./pages/IterationsPage";
 import ReleasesPage from "./pages/ReleasesPage";
 import TeamPage from "./pages/TeamPage";
 import ReportsPage from "./pages/ReportsPage";
+import BackupPage from "./pages/BackupPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
