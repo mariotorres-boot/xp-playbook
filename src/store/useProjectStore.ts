@@ -224,6 +224,7 @@ export const useProjectStore = create<ProjectState>()(
       setPenaltyRate: (rate) => set({ penaltyRate: rate }),
       login: (email) => set({ isLoggedIn: true, currentUser: email }),
       logout: () => set({ isLoggedIn: false, currentUser: '' }),
+      restoreBackup: (data) => set((s) => ({ ...s, ...data })),
     }),
     { name: 'xp-project-store-v5' }
   )
