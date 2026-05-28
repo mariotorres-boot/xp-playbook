@@ -153,6 +153,7 @@ interface ProjectState {
   setPenaltyRate: (rate: number) => void;
   login: (email: string) => void;
   logout: () => void;
+  restoreBackup: (data: Partial<ProjectState>) => void;
 }
 
 export const useProjectStore = create<ProjectState>()(
