@@ -61,6 +61,7 @@ const typeLabels: Record<string, string> = {
 export default function ReportsPage() {
   const { stories, iterations, team, groups, boards, currentBoardId, penaltyRate } = useProjectStore();
   const [generating, setGenerating] = useState(false);
+  const [expandedMember, setExpandedMember] = useState<string | null>(null);
   const progressChartRef = useRef<HTMLDivElement>(null);
   const workloadChartRef = useRef<HTMLDivElement>(null);
   const costChartRef = useRef<HTMLDivElement>(null);
